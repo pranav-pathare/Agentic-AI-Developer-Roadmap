@@ -155,6 +155,33 @@
   .meta { color: var(--muted); font-size: 14px; }
   nav#toc a.phase-link { color: #c3cad8; font-weight: 500; }
   nav#toc a.phase-link:hover { color: var(--accent2); }
+  /* collapsible phase groups in the index */
+  nav#toc .nav-phase {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #c3cad8;
+    font-size: 13.5px;
+    padding: 6px 10px;
+    margin-top: 6px;
+    border-radius: 6px;
+    user-select: none;
+  }
+  nav#toc .nav-phase:hover { background: var(--card); color: var(--text); }
+  nav#toc .nav-phase::after {
+    content: "▸";
+    color: #5b6472;
+    font-size: 11px;
+    transition: transform .15s;
+  }
+  nav#toc .nav-phase.open::after { transform: rotate(90deg); }
+  nav#toc .nav-sub { display: none; margin: 2px 0 4px 10px; border-left: 1px solid var(--border); padding-left: 6px; }
+  nav#toc .nav-sub.open { display: block; }
+  nav#toc .nav-sub a { font-size: 13px; padding: 4px 10px; }
+  h3[id], h4[id] { scroll-margin-top: 16px; }
   .kicker {
     text-transform: uppercase;
     letter-spacing: 4px;
@@ -300,9 +327,10 @@
   }
   aside#repl #output .err { color: #ff6b6b; }
   aside#repl #output .muted { color: var(--muted); }
-  /* code blocks become clickable to load into the playground */
-  main pre { position: relative; cursor: pointer; }
-  main pre::after {
+  /* only runnable Python blocks become clickable */
+  main pre { position: relative; }
+  main pre.run { cursor: pointer; }
+  main pre.run::after {
     content: "▶ Load";
     position: absolute;
     top: 8px; right: 10px;
@@ -316,11 +344,11 @@
     transition: opacity .15s;
     font-family: -apple-system, sans-serif;
   }
-  main pre:hover::after { opacity: 1; }
+  main pre.run:hover::after { opacity: 1; }
   @media (max-width: 1180px) {
     aside#repl { display: none; }
-    main pre { cursor: auto; }
-    main pre::after { display: none; }
+    main pre.run { cursor: auto; }
+    main pre.run::after { display: none; }
   }
   @media (max-width: 760px) {
     nav#toc { display: none; }
@@ -412,11 +440,14 @@
 <section id="variables">
 <h2>1. Variables</h2>
 <p>Python variables are <strong>names bound to objects</strong>. You don't declare a type — a name simply points at a value, and it can be rebound to a value of any type later. There is no <code>let</code>, <code>var</code>, or type keyword.</p>
-<pre><code><span class="n">x</span> = <span class="n">10</span>          <span class="c"># x points at an int object</span>
+<pre class="run"><code><span class="n">x</span> = <span class="n">10</span>          <span class="c"># x points at an int object</span>
+<span class="k">print</span>(<span class="n">x</span>)
 <span class="n">x</span> = <span class="s">"now text"</span>  <span class="c"># same name, now bound to a str — perfectly legal</span>
+<span class="k">print</span>(<span class="n">x</span>)
 <span class="n">a</span> = <span class="n">b</span> = <span class="n">c</span> = <span class="n">0</span>   <span class="c"># chained assignment</span>
 <span class="n">x</span>, <span class="n">y</span> = <span class="n">1</span>, <span class="n">2</span>      <span class="c"># tuple unpacking</span>
-<span class="n">x</span>, <span class="n">y</span> = <span class="n">y</span>, <span class="n">x</span>      <span class="c"># swap without a temp variable</span></code></pre>
+<span class="n">x</span>, <span class="n">y</span> = <span class="n">y</span>, <span class="n">x</span>      <span class="c"># swap without a temp variable</span>
+<span class="k">print</span>(<span class="n">a</span>, <span class="n">b</span>, <span class="n">c</span>, <span class="n">x</span>, <span class="n">y</span>)   <span class="c"># 0 0 0 2 1</span></code></pre>
 
 <h3>Naming rules and conventions</h3>
 <p>Names are case-sensitive, must start with a letter or underscore, and can contain letters, digits, and underscores. Convention (PEP 8) is <code>snake_case</code> for variables and functions, <code>UPPER_CASE</code> for constants, and <code>PascalCase</code> for classes.</p>
@@ -425,21 +456,24 @@
 
 <h3>References, not copies</h3>
 <p>Assignment binds a name to an object; it does not copy. This matters for mutable objects.</p>
-<pre><code><span class="n">a</span> = [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>]
+<pre class="run"><code><span class="n">a</span> = [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>]
 <span class="n">b</span> = <span class="n">a</span>          <span class="c"># b and a point at the SAME list</span>
 <span class="n">b</span>.<span class="f">append</span>(<span class="n">4</span>)
 <span class="k">print</span>(<span class="n">a</span>)       <span class="c"># [1, 2, 3, 4]  — a changed too!</span>
 
 <span class="k">import</span> copy
 <span class="n">c</span> = <span class="n">a</span>.<span class="f">copy</span>()   <span class="c"># shallow copy — independent top-level list</span>
-<span class="n">d</span> = copy.<span class="f">deepcopy</span>(<span class="n">a</span>)  <span class="c"># recursively copies nested objects too</span></code></pre>
+<span class="n">d</span> = copy.<span class="f">deepcopy</span>(<span class="n">a</span>)  <span class="c"># recursively copies nested objects too</span>
+<span class="k">print</span>(<span class="n">c</span>, <span class="n">d</span>)    <span class="c"># [1, 2, 3, 4] [1, 2, 3, 4]  — independent copies</span></code></pre>
 
 <h3>Scope: LEGB</h3>
 <p>Name lookup follows <strong>Local → Enclosing → Global → Built-in</strong>. Use <code>global</code> to rebind a module-level name inside a function, and <code>nonlocal</code> to rebind a name in an enclosing function.</p>
-<pre><code><span class="n">count</span> = <span class="n">0</span>
+<pre class="run"><code><span class="n">count</span> = <span class="n">0</span>
 <span class="k">def</span> <span class="f">bump</span>():
     <span class="k">global</span> <span class="n">count</span>
-    <span class="n">count</span> += <span class="n">1</span>   <span class="c"># without 'global', this would raise UnboundLocalError</span></code></pre>
+    <span class="n">count</span> += <span class="n">1</span>   <span class="c"># without 'global', this would raise UnboundLocalError</span>
+<span class="f">bump</span>(); <span class="f">bump</span>()
+<span class="k">print</span>(<span class="n">count</span>)   <span class="c"># 2</span></code></pre>
 </section>
 
 <section id="datatypes">
@@ -458,78 +492,90 @@
 </table>
 
 <h3>Numbers</h3>
-<pre><code><span class="n">n</span> = <span class="n">10</span>              <span class="c"># int — unbounded precision, no overflow</span>
+<pre class="run"><code><span class="n">n</span> = <span class="n">10</span>              <span class="c"># int — unbounded precision, no overflow</span>
 <span class="n">big</span> = <span class="n">2</span> ** <span class="n">1000</span>       <span class="c"># still an exact int</span>
 <span class="n">f</span> = <span class="n">3.14</span>            <span class="c"># float — 64-bit IEEE 754</span>
 <span class="n">underscored</span> = <span class="n">1_000_000</span>  <span class="c"># underscores for readability</span>
 <span class="n">hexv</span>, <span class="n">octv</span>, <span class="n">binv</span> = <span class="n">0xFF</span>, <span class="n">0o17</span>, <span class="n">0b1010</span>
+<span class="k">print</span>(<span class="n">hexv</span>, <span class="n">octv</span>, <span class="n">binv</span>)   <span class="c"># 255 15 10</span>
 <span class="k">print</span>(<span class="n">0.1</span> + <span class="n">0.2</span>)   <span class="c"># 0.30000000000000004 — float rounding!</span>
 <span class="k">from</span> decimal <span class="k">import</span> Decimal
 <span class="k">print</span>(Decimal(<span class="s">"0.1"</span>) + Decimal(<span class="s">"0.2"</span>))  <span class="c"># exact 0.3</span></code></pre>
 
 <h3>Type conversion &amp; checking</h3>
-<pre><code><span class="f">int</span>(<span class="s">"42"</span>)      <span class="c"># 42</span>
-<span class="f">float</span>(<span class="n">3</span>)       <span class="c"># 3.0</span>
-<span class="f">str</span>(<span class="n">3.14</span>)     <span class="c"># "3.14"</span>
-<span class="f">bool</span>(<span class="n">0</span>)        <span class="c"># False — 0, "", [], {}, None are all falsy</span>
-<span class="f">list</span>(<span class="s">"abc"</span>)   <span class="c"># ['a', 'b', 'c']</span>
+<pre class="run"><code><span class="k">print</span>(<span class="f">int</span>(<span class="s">"42"</span>))      <span class="c"># 42</span>
+<span class="k">print</span>(<span class="f">float</span>(<span class="n">3</span>))       <span class="c"># 3.0</span>
+<span class="k">print</span>(<span class="f">str</span>(<span class="n">3.14</span>))     <span class="c"># "3.14"</span>
+<span class="k">print</span>(<span class="f">bool</span>(<span class="n">0</span>))        <span class="c"># False — 0, "", [], {}, None are all falsy</span>
+<span class="k">print</span>(<span class="f">list</span>(<span class="s">"abc"</span>))   <span class="c"># ['a', 'b', 'c']</span>
 
-<span class="f">type</span>(<span class="n">x</span>) <span class="k">is</span> <span class="f">int</span>          <span class="c"># exact type check</span>
-<span class="f">isinstance</span>(<span class="n">x</span>, (<span class="f">int</span>, <span class="f">float</span>))  <span class="c"># preferred — respects inheritance</span></code></pre>
+<span class="n">x</span> = <span class="n">42</span>
+<span class="k">print</span>(<span class="f">type</span>(<span class="n">x</span>) <span class="k">is</span> <span class="f">int</span>)          <span class="c"># True — exact type check</span>
+<span class="k">print</span>(<span class="f">isinstance</span>(<span class="n">x</span>, (<span class="f">int</span>, <span class="f">float</span>)))  <span class="c"># True — respects inheritance</span></code></pre>
 
 <div class="callout warn"><strong>Gotcha:</strong> <code>bool</code> is a subclass of <code>int</code>, so <code>True == 1</code> and <code>isinstance(True, int)</code> are both <code>True</code>.</div>
 
 <h3>Type hints</h3>
 <p>Hints are optional annotations — Python does not enforce them at runtime, but tools like <code>mypy</code> and IDEs use them.</p>
-<pre><code><span class="k">def</span> <span class="f">greet</span>(<span class="n">name</span>: <span class="f">str</span>, <span class="n">times</span>: <span class="f">int</span> = <span class="n">1</span>) -> <span class="f">str</span>:
+<pre class="run"><code><span class="k">def</span> <span class="f">greet</span>(<span class="n">name</span>: <span class="f">str</span>, <span class="n">times</span>: <span class="f">int</span> = <span class="n">1</span>) -> <span class="f">str</span>:
     <span class="k">return</span> (<span class="s">"Hi "</span> + <span class="n">name</span> + <span class="s">" "</span>) * <span class="n">times</span>
 
-<span class="n">nums</span>: <span class="f">list</span>[<span class="f">int</span>] = [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>]</code></pre>
+<span class="n">nums</span>: <span class="f">list</span>[<span class="f">int</span>] = [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>]
+<span class="k">print</span>(<span class="f">greet</span>(<span class="s">"Ada"</span>, <span class="n">2</span>))   <span class="c"># Hi Ada Hi Ada</span>
+<span class="k">print</span>(<span class="n">nums</span>)             <span class="c"># hints aren't enforced at runtime</span></code></pre>
 </section>
 
 <section id="operators">
 <h2>3. Operators</h2>
 <h3>Arithmetic</h3>
-<pre><code><span class="n">7</span> / <span class="n">2</span>    <span class="c"># 3.5   true division — always float</span>
-<span class="n">7</span> // <span class="n">2</span>   <span class="c"># 3     floor division</span>
-<span class="n">7</span> % <span class="n">2</span>    <span class="c"># 1     modulo (remainder)</span>
-<span class="n">2</span> ** <span class="n">10</span>  <span class="c"># 1024  exponent</span>
--<span class="n">7</span> // <span class="n">2</span>  <span class="c"># -4    floors toward negative infinity</span></code></pre>
+<pre class="run"><code><span class="k">print</span>(<span class="n">7</span> / <span class="n">2</span>)    <span class="c"># 3.5   true division — always float</span>
+<span class="k">print</span>(<span class="n">7</span> // <span class="n">2</span>)   <span class="c"># 3     floor division</span>
+<span class="k">print</span>(<span class="n">7</span> % <span class="n">2</span>)    <span class="c"># 1     modulo (remainder)</span>
+<span class="k">print</span>(<span class="n">2</span> ** <span class="n">10</span>)  <span class="c"># 1024  exponent</span>
+<span class="k">print</span>(-<span class="n">7</span> // <span class="n">2</span>)  <span class="c"># -4    floors toward negative infinity</span></code></pre>
 
 <h3>Comparison, boolean, identity, membership</h3>
-<pre><code><span class="n">1</span> < <span class="n">x</span> <= <span class="n">10</span>          <span class="c"># chained comparison — very Pythonic</span>
-<span class="n">a</span> <span class="k">and</span> <span class="n">b</span>, <span class="n">a</span> <span class="k">or</span> <span class="n">b</span>, <span class="k">not</span> <span class="n">a</span>   <span class="c"># short-circuit logic</span>
-<span class="n">x</span> <span class="k">is</span> <span class="k">None</span>            <span class="c"># identity — use 'is' for None, not ==</span>
-<span class="s">"a"</span> <span class="k">in</span> [<span class="s">"a"</span>, <span class="s">"b"</span>]     <span class="c"># membership — True</span></code></pre>
+<pre class="run"><code><span class="n">x</span>, <span class="n">a</span>, <span class="n">b</span> = <span class="n">5</span>, <span class="k">True</span>, <span class="k">False</span>
+<span class="k">print</span>(<span class="n">1</span> < <span class="n">x</span> <= <span class="n">10</span>)          <span class="c"># True — chained comparison</span>
+<span class="k">print</span>(<span class="n">a</span> <span class="k">and</span> <span class="n">b</span>, <span class="n">a</span> <span class="k">or</span> <span class="n">b</span>, <span class="k">not</span> <span class="n">a</span>)  <span class="c"># False True False</span>
+<span class="k">print</span>(<span class="n">x</span> <span class="k">is</span> <span class="k">None</span>)            <span class="c"># False — use 'is' for None, not ==</span>
+<span class="k">print</span>(<span class="s">"a"</span> <span class="k">in</span> [<span class="s">"a"</span>, <span class="s">"b"</span>])     <span class="c"># True — membership</span></code></pre>
 <div class="callout"><strong>Short-circuit trick:</strong> <code>and</code>/<code>or</code> return an operand, not a bool. <code>name or "guest"</code> yields <code>"guest"</code> when <code>name</code> is empty.</div>
 
 <h3>Assignment, walrus, bitwise</h3>
-<pre><code><span class="n">x</span> += <span class="n">1</span>            <span class="c"># augmented: also -= *= /= //= **= %=</span>
+<pre class="run"><code><span class="n">x</span> = <span class="n">0</span>
+<span class="n">x</span> += <span class="n">1</span>            <span class="c"># augmented: also -= *= /= //= **= %=</span>
+<span class="k">print</span>(<span class="n">x</span>)             <span class="c"># 1</span>
+<span class="n">data</span> = <span class="f">list</span>(<span class="f">range</span>(<span class="n">20</span>))
 <span class="k">if</span> (<span class="n">n</span> := <span class="f">len</span>(<span class="n">data</span>)) > <span class="n">10</span>:   <span class="c"># walrus := assigns AND returns (3.8+)</span>
-    <span class="k">print</span>(<span class="n">n</span>)
-<span class="n">5</span> & <span class="n">3</span>, <span class="n">5</span> | <span class="n">3</span>, <span class="n">5</span> ^ <span class="n">3</span>, ~<span class="n">5</span>, <span class="n">1</span> << <span class="n">4</span>  <span class="c"># bitwise AND OR XOR NOT shift</span></code></pre>
+    <span class="k">print</span>(<span class="n">n</span>)         <span class="c"># 20</span>
+<span class="k">print</span>(<span class="n">5</span> & <span class="n">3</span>, <span class="n">5</span> | <span class="n">3</span>, <span class="n">5</span> ^ <span class="n">3</span>, ~<span class="n">5</span>, <span class="n">1</span> << <span class="n">4</span>)  <span class="c"># 1 7 6 -6 16</span></code></pre>
 </section>
 
 <section id="conditions">
 <h2>4. Conditions</h2>
 <p>Indentation defines blocks — there are no braces. The standard PEP 8 indent is 4 spaces.</p>
-<pre><code><span class="k">if</span> <span class="n">score</span> >= <span class="n">90</span>:
+<pre class="run"><code><span class="n">score</span> = <span class="n">85</span>
+<span class="k">if</span> <span class="n">score</span> >= <span class="n">90</span>:
     <span class="n">grade</span> = <span class="s">"A"</span>
 <span class="k">elif</span> <span class="n">score</span> >= <span class="n">80</span>:
     <span class="n">grade</span> = <span class="s">"B"</span>
 <span class="k">else</span>:
     <span class="n">grade</span> = <span class="s">"F"</span>
+<span class="k">print</span>(<span class="n">grade</span>)      <span class="c"># B</span>
 
 <span class="c"># Ternary (conditional expression)</span>
-<span class="n">label</span> = <span class="s">"pass"</span> <span class="k">if</span> <span class="n">score</span> >= <span class="n">60</span> <span class="k">else</span> <span class="s">"fail"</span></code></pre>
+<span class="n">label</span> = <span class="s">"pass"</span> <span class="k">if</span> <span class="n">score</span> >= <span class="n">60</span> <span class="k">else</span> <span class="s">"fail"</span>
+<span class="k">print</span>(<span class="n">label</span>)      <span class="c"># pass</span></code></pre>
 
 <h3>Truthiness</h3>
 <p>Any object can be tested. Falsy values: <code>False</code>, <code>None</code>, <code>0</code>, <code>0.0</code>, <code>""</code>, <code>[]</code>, <code>{}</code>, <code>()</code>, <code>set()</code>. Everything else is truthy.</p>
-<pre><code><span class="k">if</span> <span class="n">items</span>:            <span class="c"># idiomatic — don't write 'if len(items) > 0'</span>
-    <span class="f">process</span>(<span class="n">items</span>)</code></pre>
+<pre class="run"><code><span class="n">items</span> = [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>]
+<span class="k">if</span> <span class="n">items</span>:            <span class="c"># idiomatic — don't write 'if len(items) > 0'</span>
+    <span class="k">print</span>(<span class="s">"has"</span>, <span class="f">len</span>(<span class="n">items</span>), <span class="s">"items"</span>)</code></pre>
 
 <h3>match / case (structural pattern matching, 3.10+)</h3>
-<pre><code><span class="k">def</span> <span class="f">describe</span>(<span class="n">point</span>):
+<pre class="run"><code><span class="k">def</span> <span class="f">describe</span>(<span class="n">point</span>):
     <span class="k">match</span> <span class="n">point</span>:
         <span class="k">case</span> (<span class="n">0</span>, <span class="n">0</span>):
             <span class="k">return</span> <span class="s">"origin"</span>
@@ -538,166 +584,198 @@
         <span class="k">case</span> (<span class="n">x</span>, <span class="n">y</span>) <span class="k">if</span> <span class="n">x</span> == <span class="n">y</span>:
             <span class="k">return</span> <span class="s">"on diagonal"</span>
         <span class="k">case</span> _:
-            <span class="k">return</span> <span class="s">"somewhere else"</span></code></pre>
+            <span class="k">return</span> <span class="s">"somewhere else"</span>
+
+<span class="k">print</span>(<span class="f">describe</span>((<span class="n">0</span>, <span class="n">0</span>)))   <span class="c"># origin</span>
+<span class="k">print</span>(<span class="f">describe</span>((<span class="n">5</span>, <span class="n">0</span>)))   <span class="c"># on x-axis at 5</span>
+<span class="k">print</span>(<span class="f">describe</span>((<span class="n">3</span>, <span class="n">3</span>)))   <span class="c"># on diagonal</span></code></pre>
 </section>
 
 <section id="loops">
 <h2>5. Loops</h2>
 <h3>for — iterates over any iterable</h3>
-<pre><code><span class="k">for</span> <span class="n">item</span> <span class="k">in</span> [<span class="s">"a"</span>, <span class="s">"b"</span>, <span class="s">"c"</span>]:
+<pre class="run"><code><span class="k">for</span> <span class="n">item</span> <span class="k">in</span> [<span class="s">"a"</span>, <span class="s">"b"</span>, <span class="s">"c"</span>]:
     <span class="k">print</span>(<span class="n">item</span>)
 
-<span class="k">for</span> <span class="n">i</span> <span class="k">in</span> <span class="f">range</span>(<span class="n">0</span>, <span class="n">10</span>, <span class="n">2</span>):   <span class="c"># start, stop (exclusive), step → 0 2 4 6 8</span>
-    ...
+<span class="k">for</span> <span class="n">i</span> <span class="k">in</span> <span class="f">range</span>(<span class="n">0</span>, <span class="n">10</span>, <span class="n">2</span>):   <span class="c"># start, stop (exclusive), step</span>
+    <span class="k">print</span>(<span class="n">i</span>, end=<span class="s">" "</span>)          <span class="c"># 0 2 4 6 8</span>
+<span class="k">print</span>()
 
+<span class="n">items</span> = [<span class="s">"x"</span>, <span class="s">"y"</span>, <span class="s">"z"</span>]
 <span class="k">for</span> <span class="n">i</span>, <span class="n">val</span> <span class="k">in</span> <span class="f">enumerate</span>(<span class="n">items</span>, start=<span class="n">1</span>):  <span class="c"># index + value</span>
     <span class="k">print</span>(<span class="n">i</span>, <span class="n">val</span>)
 
+<span class="n">names</span>, <span class="n">ages</span> = [<span class="s">"Ada"</span>, <span class="s">"Bob"</span>], [<span class="n">36</span>, <span class="n">40</span>]
 <span class="k">for</span> <span class="n">name</span>, <span class="n">age</span> <span class="k">in</span> <span class="f">zip</span>(<span class="n">names</span>, <span class="n">ages</span>):  <span class="c"># parallel iteration</span>
-    ...</code></pre>
+    <span class="k">print</span>(<span class="n">name</span>, <span class="n">age</span>)</code></pre>
 <div class="callout tip"><strong>Idiom:</strong> Prefer iterating the object directly (<code>for x in items</code>) over <code>for i in range(len(items))</code>. Reach for <code>enumerate</code> when you need the index.</div>
 
 <h3>while, break, continue, else</h3>
-<pre><code><span class="k">while</span> <span class="n">queue</span>:
-    <span class="n">job</span> = <span class="n">queue</span>.<span class="f">pop</span>()
-    <span class="k">if</span> <span class="n">job</span>.<span class="n">bad</span>:
-        <span class="k">continue</span>       <span class="c"># skip to next iteration</span>
-    <span class="k">if</span> <span class="n">job</span>.<span class="n">stop</span>:
-        <span class="k">break</span>          <span class="c"># exit loop entirely</span>
+<pre class="run"><code><span class="c"># break / continue</span>
+<span class="k">for</span> <span class="n">n</span> <span class="k">in</span> <span class="f">range</span>(<span class="n">10</span>):
+    <span class="k">if</span> <span class="n">n</span> == <span class="n">3</span>:
+        <span class="k">continue</span>       <span class="c"># skip 3</span>
+    <span class="k">if</span> <span class="n">n</span> == <span class="n">6</span>:
+        <span class="k">break</span>          <span class="c"># stop at 6</span>
+    <span class="k">print</span>(<span class="n">n</span>, end=<span class="s">" "</span>)    <span class="c"># 0 1 2 4 5</span>
+<span class="k">print</span>()
 
 <span class="c"># loop-else runs ONLY if the loop finished without hitting break</span>
+<span class="n">x</span> = <span class="n">13</span>
 <span class="k">for</span> <span class="n">n</span> <span class="k">in</span> <span class="f">range</span>(<span class="n">2</span>, <span class="n">x</span>):
     <span class="k">if</span> <span class="n">x</span> % <span class="n">n</span> == <span class="n">0</span>:
         <span class="k">break</span>
 <span class="k">else</span>:
-    <span class="k">print</span>(<span class="s">"prime!"</span>)   <span class="c"># no divisor found</span></code></pre>
+    <span class="k">print</span>(<span class="n">x</span>, <span class="s">"is prime!"</span>)   <span class="c"># no divisor found</span></code></pre>
 </section>
 
 <section id="functions">
 <h2>6. Functions</h2>
-<pre><code><span class="k">def</span> <span class="f">area</span>(<span class="n">width</span>, <span class="n">height</span>=<span class="n">1</span>):   <span class="c"># height has a default</span>
+<pre class="run"><code><span class="k">def</span> <span class="f">area</span>(<span class="n">width</span>, <span class="n">height</span>=<span class="n">1</span>):   <span class="c"># height has a default</span>
     <span class="s">"""Docstring: returns rectangle area."""</span>
     <span class="k">return</span> <span class="n">width</span> * <span class="n">height</span>
 
-<span class="f">area</span>(<span class="n">3</span>)              <span class="c"># positional → 3</span>
-<span class="f">area</span>(<span class="n">3</span>, height=<span class="n">4</span>)    <span class="c"># keyword argument → 12</span></code></pre>
+<span class="k">print</span>(<span class="f">area</span>(<span class="n">3</span>))              <span class="c"># positional → 3</span>
+<span class="k">print</span>(<span class="f">area</span>(<span class="n">3</span>, height=<span class="n">4</span>))    <span class="c"># keyword argument → 12</span></code></pre>
 
 <h3>*args and **kwargs</h3>
-<pre><code><span class="k">def</span> <span class="f">demo</span>(*<span class="n">args</span>, **<span class="n">kwargs</span>):
+<pre class="run"><code><span class="k">def</span> <span class="f">demo</span>(*<span class="n">args</span>, **<span class="n">kwargs</span>):
     <span class="k">print</span>(<span class="n">args</span>)     <span class="c"># tuple of extra positional args</span>
     <span class="k">print</span>(<span class="n">kwargs</span>)   <span class="c"># dict of extra keyword args</span>
 
 <span class="f">demo</span>(<span class="n">1</span>, <span class="n">2</span>, x=<span class="n">10</span>)   <span class="c"># args=(1, 2)  kwargs={'x': 10}</span>
 
 <span class="n">nums</span> = [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>]
-<span class="f">print</span>(*<span class="n">nums</span>)         <span class="c"># unpacking: same as print(1, 2, 3)</span></code></pre>
+<span class="k">print</span>(*<span class="n">nums</span>)         <span class="c"># unpacking: same as print(1, 2, 3)</span></code></pre>
 
 <h3>Positional-only and keyword-only parameters</h3>
-<pre><code><span class="k">def</span> <span class="f">f</span>(<span class="n">pos_only</span>, /, <span class="n">normal</span>, *, <span class="n">kw_only</span>):
-    ...
-<span class="c"># / marks end of positional-only; * marks start of keyword-only</span></code></pre>
+<pre class="run"><code><span class="k">def</span> <span class="f">f</span>(<span class="n">pos_only</span>, /, <span class="n">normal</span>, *, <span class="n">kw_only</span>):
+    <span class="k">return</span> <span class="n">pos_only</span>, <span class="n">normal</span>, <span class="n">kw_only</span>
+<span class="c"># / marks end of positional-only; * marks start of keyword-only</span>
+<span class="k">print</span>(<span class="f">f</span>(<span class="n">1</span>, <span class="n">2</span>, kw_only=<span class="n">3</span>))   <span class="c"># (1, 2, 3)</span></code></pre>
 
 <div class="callout warn"><strong>Classic gotcha — mutable default arguments:</strong> defaults are evaluated once at definition time.
-<pre><code><span class="k">def</span> <span class="f">bad</span>(<span class="n">item</span>, <span class="n">bucket</span>=[]):   <span class="c"># SHARED across all calls!</span>
+<pre class="run"><code><span class="k">def</span> <span class="f">bad</span>(<span class="n">item</span>, <span class="n">bucket</span>=[]):   <span class="c"># SHARED across all calls!</span>
     <span class="n">bucket</span>.<span class="f">append</span>(<span class="n">item</span>); <span class="k">return</span> <span class="n">bucket</span>
-<span class="f">bad</span>(<span class="n">1</span>); <span class="f">bad</span>(<span class="n">2</span>)          <span class="c"># [1, 2]  — not what you want</span>
+<span class="k">print</span>(<span class="f">bad</span>(<span class="n">1</span>))          <span class="c"># [1]</span>
+<span class="k">print</span>(<span class="f">bad</span>(<span class="n">2</span>))          <span class="c"># [1, 2]  — not what you want!</span>
 
 <span class="k">def</span> <span class="f">good</span>(<span class="n">item</span>, <span class="n">bucket</span>=<span class="k">None</span>):
     <span class="k">if</span> <span class="n">bucket</span> <span class="k">is</span> <span class="k">None</span>: <span class="n">bucket</span> = []
-    <span class="n">bucket</span>.<span class="f">append</span>(<span class="n">item</span>); <span class="k">return</span> <span class="n">bucket</span></code></pre></div>
+    <span class="n">bucket</span>.<span class="f">append</span>(<span class="n">item</span>); <span class="k">return</span> <span class="n">bucket</span>
+<span class="k">print</span>(<span class="f">good</span>(<span class="n">1</span>))         <span class="c"># [1]</span>
+<span class="k">print</span>(<span class="f">good</span>(<span class="n">2</span>))         <span class="c"># [2]  — fresh list each call</span></code></pre></div>
 
 <h3>Returning multiple values</h3>
-<pre><code><span class="k">def</span> <span class="f">min_max</span>(<span class="n">xs</span>):
+<pre class="run"><code><span class="k">def</span> <span class="f">min_max</span>(<span class="n">xs</span>):
     <span class="k">return</span> <span class="f">min</span>(<span class="n">xs</span>), <span class="f">max</span>(<span class="n">xs</span>)   <span class="c"># actually returns a tuple</span>
-<span class="n">lo</span>, <span class="n">hi</span> = <span class="f">min_max</span>([<span class="n">3</span>, <span class="n">1</span>, <span class="n">9</span>])       <span class="c"># unpacked</span></code></pre>
+<span class="n">lo</span>, <span class="n">hi</span> = <span class="f">min_max</span>([<span class="n">3</span>, <span class="n">1</span>, <span class="n">9</span>])       <span class="c"># unpacked</span>
+<span class="k">print</span>(<span class="n">lo</span>, <span class="n">hi</span>)                      <span class="c"># 1 9</span></code></pre>
 <p>Functions are first-class objects: assign them to variables, pass them as arguments, and return them. This underpins decorators, <code>map</code>/<code>filter</code>, and callbacks.</p>
 </section>
 
 <section id="strings">
 <h2>7. Strings</h2>
 <p>Strings are <strong>immutable</strong> sequences of Unicode characters. Any "modifying" method returns a new string.</p>
-<pre><code><span class="n">s</span> = <span class="s">"Hello, World"</span>
-<span class="n">s</span>[<span class="n">0</span>]        <span class="c"># 'H'   indexing</span>
-<span class="n">s</span>[-<span class="n">1</span>]       <span class="c"># 'd'   negative index from the end</span>
-<span class="n">s</span>[<span class="n">0</span>:<span class="n">5</span>]      <span class="c"># 'Hello'  slicing [start:stop:step]</span>
-<span class="n">s</span>[::-<span class="n">1</span>]     <span class="c"># 'dlroW ,olleH'  reverse</span>
-<span class="f">len</span>(<span class="n">s</span>)      <span class="c"># 12</span></code></pre>
+<pre class="run"><code><span class="n">s</span> = <span class="s">"Hello, World"</span>
+<span class="k">print</span>(<span class="n">s</span>[<span class="n">0</span>])        <span class="c"># 'H'   indexing</span>
+<span class="k">print</span>(<span class="n">s</span>[-<span class="n">1</span>])       <span class="c"># 'd'   negative index from the end</span>
+<span class="k">print</span>(<span class="n">s</span>[<span class="n">0</span>:<span class="n">5</span>])      <span class="c"># 'Hello'  slicing [start:stop:step]</span>
+<span class="k">print</span>(<span class="n">s</span>[::-<span class="n">1</span>])     <span class="c"># 'dlroW ,olleH'  reverse</span>
+<span class="k">print</span>(<span class="f">len</span>(<span class="n">s</span>))      <span class="c"># 12</span></code></pre>
 
 <h3>f-strings (formatted string literals, 3.6+)</h3>
-<pre><code><span class="n">name</span>, <span class="n">pi</span> = <span class="s">"Ada"</span>, <span class="n">3.14159</span>
-<span class="s">f"Hi {name}, pi is {pi:.2f}"</span>   <span class="c"># 'Hi Ada, pi is 3.14'</span>
-<span class="s">f"{name=}"</span>                      <span class="c"># "name='Ada'"  self-documenting (3.8+)</span>
-<span class="s">f"{42:>8}"</span>                      <span class="c"># right-align in width 8</span>
-<span class="s">f"{1234567:,}"</span>                  <span class="c"># '1,234,567'  thousands separator</span></code></pre>
+<pre class="run"><code><span class="n">name</span>, <span class="n">pi</span> = <span class="s">"Ada"</span>, <span class="n">3.14159</span>
+<span class="k">print</span>(<span class="s">f"Hi {name}, pi is {pi:.2f}"</span>)   <span class="c"># Hi Ada, pi is 3.14</span>
+<span class="k">print</span>(<span class="s">f"{name=}"</span>)                      <span class="c"># name='Ada'  self-documenting (3.8+)</span>
+<span class="k">print</span>(<span class="s">f"{42:>8}"</span>)                      <span class="c"># right-align in width 8</span>
+<span class="k">print</span>(<span class="s">f"{1234567:,}"</span>)                  <span class="c"># 1,234,567  thousands separator</span></code></pre>
 
 <h3>Common methods</h3>
-<pre><code><span class="s">"  hi  "</span>.<span class="f">strip</span>()          <span class="c"># 'hi'   (also lstrip/rstrip)</span>
-<span class="s">"a,b,c"</span>.<span class="f">split</span>(<span class="s">","</span>)        <span class="c"># ['a', 'b', 'c']</span>
-<span class="s">"-"</span>.<span class="f">join</span>([<span class="s">"a"</span>, <span class="s">"b"</span>])       <span class="c"># 'a-b'</span>
-<span class="s">"Hello"</span>.<span class="f">replace</span>(<span class="s">"l"</span>, <span class="s">"L"</span>)  <span class="c"># 'HeLLo'</span>
-<span class="s">"Hello"</span>.<span class="f">lower</span>(), <span class="s">"hi"</span>.<span class="f">upper</span>()
-<span class="s">"file.txt"</span>.<span class="f">endswith</span>(<span class="s">".txt"</span>)   <span class="c"># True  (also startswith)</span>
-<span class="s">"abc"</span>.<span class="f">find</span>(<span class="s">"b"</span>)          <span class="c"># 1   (-1 if not found)</span>
-<span class="s">"42"</span>.<span class="f">isdigit</span>(), <span class="s">"ab"</span>.<span class="f">isalpha</span>()</code></pre>
+<pre class="run"><code><span class="k">print</span>(<span class="s">"  hi  "</span>.<span class="f">strip</span>())          <span class="c"># 'hi'   (also lstrip/rstrip)</span>
+<span class="k">print</span>(<span class="s">"a,b,c"</span>.<span class="f">split</span>(<span class="s">","</span>))        <span class="c"># ['a', 'b', 'c']</span>
+<span class="k">print</span>(<span class="s">"-"</span>.<span class="f">join</span>([<span class="s">"a"</span>, <span class="s">"b"</span>]))       <span class="c"># 'a-b'</span>
+<span class="k">print</span>(<span class="s">"Hello"</span>.<span class="f">replace</span>(<span class="s">"l"</span>, <span class="s">"L"</span>))  <span class="c"># 'HeLLo'</span>
+<span class="k">print</span>(<span class="s">"Hello"</span>.<span class="f">lower</span>(), <span class="s">"hi"</span>.<span class="f">upper</span>())
+<span class="k">print</span>(<span class="s">"file.txt"</span>.<span class="f">endswith</span>(<span class="s">".txt"</span>))   <span class="c"># True  (also startswith)</span>
+<span class="k">print</span>(<span class="s">"abc"</span>.<span class="f">find</span>(<span class="s">"b"</span>))          <span class="c"># 1   (-1 if not found)</span>
+<span class="k">print</span>(<span class="s">"42"</span>.<span class="f">isdigit</span>(), <span class="s">"ab"</span>.<span class="f">isalpha</span>())</code></pre>
 
 <h3>Raw, multi-line, and byte strings</h3>
-<pre><code><span class="n">path</span> = <span class="s">r"C:\new\test"</span>       <span class="c"># raw — backslashes are literal</span>
+<pre class="run"><code><span class="n">path</span> = <span class="s">r"C:\new\test"</span>       <span class="c"># raw — backslashes are literal</span>
 <span class="n">doc</span> = <span class="s">"""line 1
 line 2"""</span>                    <span class="c"># triple-quoted spans lines</span>
-<span class="n">data</span> = <span class="s">b"bytes"</span>              <span class="c"># bytes, not str; .decode()/.encode() to convert</span></code></pre>
+<span class="n">data</span> = <span class="s">b"bytes"</span>              <span class="c"># bytes, not str; .decode()/.encode() to convert</span>
+<span class="k">print</span>(<span class="n">path</span>)
+<span class="k">print</span>(<span class="n">doc</span>)
+<span class="k">print</span>(<span class="n">data</span>, <span class="n">data</span>.<span class="f">decode</span>())   <span class="c"># b'bytes' bytes</span></code></pre>
 <div class="callout tip"><strong>Tip:</strong> Building a big string in a loop? Append to a <code>list</code> and <code>"".join(parts)</code> at the end — concatenating with <code>+=</code> repeatedly is O(n²).</div>
 </section>
 
 <section id="lists">
 <h2>8. Lists</h2>
 <p>A <code>list</code> is an ordered, mutable sequence — a dynamic array under the hood. It can hold mixed types, though homogeneous lists are more common.</p>
-<pre><code><span class="n">xs</span> = [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>]
-<span class="n">xs</span>[<span class="n">0</span>] = <span class="n">99</span>            <span class="c"># mutable: [99, 2, 3]</span>
-<span class="n">xs</span>[<span class="n">1</span>:<span class="n">3</span>]              <span class="c"># slice → [2, 3] (returns a NEW list)</span>
-<span class="n">xs</span>[::-<span class="n">1</span>]             <span class="c"># reversed copy</span></code></pre>
+<pre class="run"><code><span class="n">xs</span> = [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>]
+<span class="n">xs</span>[<span class="n">0</span>] = <span class="n">99</span>            <span class="c"># mutable</span>
+<span class="k">print</span>(<span class="n">xs</span>)              <span class="c"># [99, 2, 3]</span>
+<span class="k">print</span>(<span class="n">xs</span>[<span class="n">1</span>:<span class="n">3</span>])         <span class="c"># [2, 3] (returns a NEW list)</span>
+<span class="k">print</span>(<span class="n">xs</span>[::-<span class="n">1</span>])        <span class="c"># reversed copy</span></code></pre>
 
 <h3>Core methods</h3>
-<pre><code><span class="n">xs</span>.<span class="f">append</span>(<span class="n">4</span>)        <span class="c"># add one item to the end</span>
+<pre class="run"><code><span class="n">xs</span> = [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>]
+<span class="n">xs</span>.<span class="f">append</span>(<span class="n">4</span>)        <span class="c"># add one item to the end</span>
 <span class="n">xs</span>.<span class="f">extend</span>([<span class="n">5</span>, <span class="n">6</span>])  <span class="c"># add many (not append, which would nest)</span>
 <span class="n">xs</span>.<span class="f">insert</span>(<span class="n">0</span>, <span class="n">9</span>)     <span class="c"># insert at index</span>
-<span class="n">xs</span>.<span class="f">pop</span>()            <span class="c"># remove & return last (or pop(i))</span>
+<span class="k">print</span>(<span class="n">xs</span>)              <span class="c"># [9, 1, 2, 3, 4, 5, 6]</span>
+<span class="k">print</span>(<span class="n">xs</span>.<span class="f">pop</span>())        <span class="c"># 6  (remove & return last)</span>
 <span class="n">xs</span>.<span class="f">remove</span>(<span class="n">9</span>)        <span class="c"># remove first matching value</span>
-<span class="n">xs</span>.<span class="f">index</span>(<span class="n">5</span>)         <span class="c"># first position of value</span>
-<span class="n">xs</span>.<span class="f">count</span>(<span class="n">2</span>)         <span class="c"># number of occurrences</span>
-<span class="n">xs</span>.<span class="f">reverse</span>()        <span class="c"># in place</span>
+<span class="k">print</span>(<span class="n">xs</span>.<span class="f">index</span>(<span class="n">5</span>))     <span class="c"># 4  (first position of value)</span>
+<span class="k">print</span>(<span class="n">xs</span>.<span class="f">count</span>(<span class="n">2</span>))     <span class="c"># 1</span>
 <span class="n">xs</span>.<span class="f">sort</span>()           <span class="c"># in place; sorted(xs) returns a new list</span>
-<span class="n">xs</span>.<span class="f">sort</span>(key=<span class="k">len</span>, reverse=<span class="k">True</span>)   <span class="c"># sort by a key function</span></code></pre>
+<span class="k">print</span>(<span class="n">xs</span>)
+<span class="n">words</span> = [<span class="s">"ccc"</span>, <span class="s">"a"</span>, <span class="s">"bb"</span>]
+<span class="n">words</span>.<span class="f">sort</span>(key=<span class="k">len</span>, reverse=<span class="k">True</span>)   <span class="c"># sort by a key function</span>
+<span class="k">print</span>(<span class="n">words</span>)          <span class="c"># ['ccc', 'bb', 'a']</span></code></pre>
 
 <h3>Building &amp; copying</h3>
-<pre><code><span class="n">grid</span> = [[<span class="n">0</span>] * <span class="n">3</span> <span class="k">for</span> _ <span class="k">in</span> <span class="f">range</span>(<span class="n">3</span>)]  <span class="c"># 3x3 — correct way</span>
+<pre class="run"><code><span class="n">grid</span> = [[<span class="n">0</span>] * <span class="n">3</span> <span class="k">for</span> _ <span class="k">in</span> <span class="f">range</span>(<span class="n">3</span>)]  <span class="c"># 3x3 — correct way</span>
+<span class="k">print</span>(<span class="n">grid</span>)            <span class="c"># [[0, 0, 0], [0, 0, 0], [0, 0, 0]]</span>
 <span class="c"># DON'T: [[0]*3]*3 → three references to the SAME inner list</span>
-<span class="n">shallow</span> = <span class="n">xs</span>[:]        <span class="c"># or xs.copy() / list(xs)</span></code></pre>
+<span class="n">xs</span> = [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>]
+<span class="n">shallow</span> = <span class="n">xs</span>[:]        <span class="c"># or xs.copy() / list(xs)</span>
+<span class="k">print</span>(<span class="n">shallow</span>)         <span class="c"># [1, 2, 3]</span></code></pre>
 <div class="callout"><strong>Performance:</strong> append/pop at the end and index access are O(1). Insert/remove/pop at the front are O(n) — for a queue, use <code>collections.deque</code> instead.</div>
 </section>
 
 <section id="tuples">
 <h2>9. Tuples</h2>
 <p>A <code>tuple</code> is an ordered, <strong>immutable</strong> sequence. Because it's immutable it's hashable, so tuples can be dict keys and set members.</p>
-<pre><code><span class="n">t</span> = (<span class="n">1</span>, <span class="s">"two"</span>, <span class="n">3.0</span>)
-<span class="n">t</span>[<span class="n">0</span>]              <span class="c"># 1  — reading is fine</span>
+<pre class="run"><code><span class="n">t</span> = (<span class="n">1</span>, <span class="s">"two"</span>, <span class="n">3.0</span>)
+<span class="k">print</span>(<span class="n">t</span>[<span class="n">0</span>])              <span class="c"># 1  — reading is fine</span>
 <span class="c"># t[0] = 9        → TypeError: 'tuple' object does not support item assignment</span>
 
 <span class="n">one</span> = (<span class="n">5</span>,)          <span class="c"># single-element tuple NEEDS the trailing comma</span>
 <span class="n">not_tuple</span> = (<span class="n">5</span>)     <span class="c"># just the int 5</span>
 <span class="n">empty</span> = ()           <span class="c"># empty tuple</span>
-<span class="n">bare</span> = <span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>     <span class="c"># parentheses are optional</span></code></pre>
+<span class="n">bare</span> = <span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>     <span class="c"># parentheses are optional</span>
+<span class="k">print</span>(<span class="n">one</span>, <span class="n">not_tuple</span>, <span class="n">empty</span>, <span class="n">bare</span>)   <span class="c"># (5,) 5 () (1, 2, 3)</span></code></pre>
 
 <h3>Unpacking &amp; multiple return</h3>
-<pre><code><span class="n">x</span>, <span class="n">y</span>, <span class="n">z</span> = (<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>)
-<span class="n">first</span>, *<span class="n">rest</span> = [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">4</span>]   <span class="c"># first=1, rest=[2,3,4]  (star capture)</span>
-<span class="k">def</span> <span class="f">stats</span>(): <span class="k">return</span> <span class="f">min</span>(<span class="n">d</span>), <span class="f">max</span>(<span class="n">d</span>)  <span class="c"># returns a tuple</span></code></pre>
+<pre class="run"><code><span class="n">x</span>, <span class="n">y</span>, <span class="n">z</span> = (<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>)
+<span class="k">print</span>(<span class="n">x</span>, <span class="n">y</span>, <span class="n">z</span>)              <span class="c"># 1 2 3</span>
+<span class="n">first</span>, *<span class="n">rest</span> = [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">4</span>]   <span class="c"># star capture</span>
+<span class="k">print</span>(<span class="n">first</span>, <span class="n">rest</span>)            <span class="c"># 1 [2, 3, 4]</span>
+<span class="n">d</span> = [<span class="n">3</span>, <span class="n">1</span>, <span class="n">9</span>]
+<span class="k">def</span> <span class="f">stats</span>(): <span class="k">return</span> <span class="f">min</span>(<span class="n">d</span>), <span class="f">max</span>(<span class="n">d</span>)  <span class="c"># returns a tuple</span>
+<span class="k">print</span>(<span class="f">stats</span>())                 <span class="c"># (1, 9)</span></code></pre>
 
 <h3>Named tuples — readable, still lightweight</h3>
-<pre><code><span class="k">from</span> collections <span class="k">import</span> namedtuple
+<pre class="run"><code><span class="k">from</span> collections <span class="k">import</span> namedtuple
 Point = <span class="f">namedtuple</span>(<span class="s">"Point"</span>, [<span class="s">"x"</span>, <span class="s">"y"</span>])
 <span class="n">p</span> = <span class="f">Point</span>(<span class="n">3</span>, <span class="n">4</span>)
-<span class="n">p</span>.<span class="n">x</span>, <span class="n">p</span>.<span class="n">y</span>          <span class="c"># attribute access → 3, 4</span>
-<span class="n">p</span>[<span class="n">0</span>]                <span class="c"># still indexable → 3</span></code></pre>
+<span class="k">print</span>(<span class="n">p</span>.<span class="n">x</span>, <span class="n">p</span>.<span class="n">y</span>)      <span class="c"># 3 4  attribute access</span>
+<span class="k">print</span>(<span class="n">p</span>[<span class="n">0</span>])           <span class="c"># 3   still indexable</span>
+<span class="k">print</span>(<span class="n">p</span>)              <span class="c"># Point(x=3, y=4)</span></code></pre>
 <div class="callout tip"><strong>When to use:</strong> tuple for a fixed heterogeneous record whose meaning is positional (a coordinate, an RGB triple, a DB row); list for a growing homogeneous collection.</div>
 <div class="callout warn"><strong>Note:</strong> "Immutable" means you can't rebind elements. If an element is itself mutable, it can still change: <code>t = ([1], 2); t[0].append(9)</code> is allowed.</div>
 </section>
@@ -705,61 +783,75 @@ Point = <span class="f">namedtuple</span>(<span class="s">"Point"</span>, [<span
 <section id="dicts">
 <h2>10. Dictionaries</h2>
 <p>A <code>dict</code> maps hashable keys to values. Since Python 3.7 insertion order is guaranteed. Lookup, insert, and delete are average O(1).</p>
-<pre><code><span class="n">user</span> = {<span class="s">"name"</span>: <span class="s">"Ada"</span>, <span class="s">"age"</span>: <span class="n">36</span>}
-<span class="n">user</span>[<span class="s">"name"</span>]              <span class="c"># 'Ada'  — KeyError if missing</span>
-<span class="n">user</span>.<span class="f">get</span>(<span class="s">"email"</span>)         <span class="c"># None  — safe, no error</span>
-<span class="n">user</span>.<span class="f">get</span>(<span class="s">"email"</span>, <span class="s">"n/a"</span>)  <span class="c"># default if missing</span>
+<pre class="run"><code><span class="n">user</span> = {<span class="s">"name"</span>: <span class="s">"Ada"</span>, <span class="s">"age"</span>: <span class="n">36</span>}
+<span class="k">print</span>(<span class="n">user</span>[<span class="s">"name"</span>])              <span class="c"># 'Ada'  — KeyError if missing</span>
+<span class="k">print</span>(<span class="n">user</span>.<span class="f">get</span>(<span class="s">"email"</span>))         <span class="c"># None  — safe, no error</span>
+<span class="k">print</span>(<span class="n">user</span>.<span class="f">get</span>(<span class="s">"email"</span>, <span class="s">"n/a"</span>))  <span class="c"># default if missing</span>
 <span class="n">user</span>[<span class="s">"age"</span>] = <span class="n">37</span>            <span class="c"># insert or update</span>
 <span class="k">del</span> <span class="n">user</span>[<span class="s">"age"</span>]             <span class="c"># remove key</span>
-<span class="s">"name"</span> <span class="k">in</span> <span class="n">user</span>              <span class="c"># membership tests KEYS → True</span></code></pre>
+<span class="k">print</span>(<span class="s">"name"</span> <span class="k">in</span> <span class="n">user</span>)          <span class="c"># True  — membership tests KEYS</span>
+<span class="k">print</span>(<span class="n">user</span>)</code></pre>
 
 <h3>Iterating</h3>
-<pre><code><span class="k">for</span> <span class="n">key</span> <span class="k">in</span> <span class="n">user</span>:              <span class="c"># iterates keys by default</span>
-    ...
+<pre class="run"><code><span class="n">user</span> = {<span class="s">"name"</span>: <span class="s">"Ada"</span>, <span class="s">"age"</span>: <span class="n">36</span>}
+<span class="k">for</span> <span class="n">key</span> <span class="k">in</span> <span class="n">user</span>:              <span class="c"># iterates keys by default</span>
+    <span class="k">print</span>(<span class="s">"key:"</span>, <span class="n">key</span>)
 <span class="k">for</span> <span class="n">k</span>, <span class="n">v</span> <span class="k">in</span> <span class="n">user</span>.<span class="f">items</span>():     <span class="c"># key/value pairs</span>
-    <span class="k">print</span>(<span class="n">k</span>, <span class="n">v</span>)
-<span class="n">user</span>.<span class="f">keys</span>(), <span class="n">user</span>.<span class="f">values</span>()   <span class="c"># view objects</span></code></pre>
+    <span class="k">print</span>(<span class="n">k</span>, <span class="s">"="</span>, <span class="n">v</span>)
+<span class="k">print</span>(<span class="f">list</span>(<span class="n">user</span>.<span class="f">keys</span>()), <span class="f">list</span>(<span class="n">user</span>.<span class="f">values</span>()))</code></pre>
 
 <h3>Useful patterns</h3>
-<pre><code><span class="n">merged</span> = {**<span class="n">a</span>, **<span class="n">b</span>}          <span class="c"># merge (b wins on conflicts)</span>
-<span class="n">merged</span> = <span class="n">a</span> | <span class="n">b</span>               <span class="c"># same, 3.9+</span>
+<pre class="run"><code><span class="n">a</span>, <span class="n">b</span> = {<span class="s">"x"</span>: <span class="n">1</span>}, {<span class="s">"x"</span>: <span class="n">9</span>, <span class="s">"y"</span>: <span class="n">2</span>}
+<span class="k">print</span>({**<span class="n">a</span>, **<span class="n">b</span>})          <span class="c"># {'x': 9, 'y': 2}  b wins on conflicts</span>
+<span class="k">print</span>(<span class="n">a</span> | <span class="n">b</span>)               <span class="c"># same, 3.9+</span>
+
+<span class="n">user</span> = {}
 <span class="n">user</span>.<span class="f">setdefault</span>(<span class="s">"tags"</span>, []).<span class="f">append</span>(<span class="s">"x"</span>)  <span class="c"># get-or-create</span>
+<span class="k">print</span>(<span class="n">user</span>)                  <span class="c"># {'tags': ['x']}</span>
 
 <span class="k">from</span> collections <span class="k">import</span> defaultdict, Counter
 <span class="n">groups</span> = <span class="f">defaultdict</span>(<span class="f">list</span>)   <span class="c"># missing key auto-creates []</span>
 <span class="n">groups</span>[<span class="s">"a"</span>].<span class="f">append</span>(<span class="n">1</span>)
-<span class="f">Counter</span>(<span class="s">"mississippi"</span>)      <span class="c"># {'i':4,'s':4,'p':2,'m':1}</span>
+<span class="k">print</span>(<span class="f">dict</span>(<span class="n">groups</span>))         <span class="c"># {'a': [1]}</span>
+<span class="k">print</span>(<span class="f">Counter</span>(<span class="s">"mississippi"</span>))  <span class="c"># Counter({'i': 4, 's': 4, 'p': 2, 'm': 1})</span>
 
 <span class="c"># dict comprehension</span>
-<span class="n">squares</span> = {<span class="n">n</span>: <span class="n">n</span>*<span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="k">in</span> <span class="f">range</span>(<span class="n">5</span>)}</code></pre>
+<span class="n">squares</span> = {<span class="n">n</span>: <span class="n">n</span>*<span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="k">in</span> <span class="f">range</span>(<span class="n">5</span>)}
+<span class="k">print</span>(<span class="n">squares</span>)</code></pre>
 <div class="callout warn"><strong>Keys must be hashable:</strong> strings, numbers, and tuples work; lists and dicts do not.</div>
 </section>
 
 <section id="sets">
 <h2>11. Sets</h2>
 <p>A <code>set</code> is an unordered collection of unique, hashable elements. Membership testing is average O(1) — far faster than scanning a list.</p>
-<pre><code><span class="n">s</span> = {<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>}
+<pre class="run"><code><span class="n">s</span> = {<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>}
 <span class="n">empty</span> = <span class="f">set</span>()          <span class="c"># {} is an empty DICT, not a set!</span>
 <span class="n">s</span>.<span class="f">add</span>(<span class="n">4</span>)
 <span class="n">s</span>.<span class="f">discard</span>(<span class="n">9</span>)          <span class="c"># no error if absent (remove() raises)</span>
-<span class="n">2</span> <span class="k">in</span> <span class="n">s</span>                <span class="c"># fast membership → True</span>
-<span class="f">set</span>([<span class="n">1</span>, <span class="n">1</span>, <span class="n">2</span>, <span class="n">2</span>])     <span class="c"># {1, 2}  — dedup an iterable</span></code></pre>
+<span class="k">print</span>(<span class="n">2</span> <span class="k">in</span> <span class="n">s</span>)          <span class="c"># True — fast membership</span>
+<span class="k">print</span>(<span class="f">set</span>([<span class="n">1</span>, <span class="n">1</span>, <span class="n">2</span>, <span class="n">2</span>]))  <span class="c"># {1, 2} — dedup an iterable</span>
+<span class="k">print</span>(<span class="n">s</span>)                 <span class="c"># {1, 2, 3, 4}</span></code></pre>
 
 <h3>Set algebra</h3>
-<pre><code><span class="n">a</span>, <span class="n">b</span> = {<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>}, {<span class="n">2</span>, <span class="n">3</span>, <span class="n">4</span>}
-<span class="n">a</span> | <span class="n">b</span>    <span class="c"># union        {1, 2, 3, 4}</span>
-<span class="n">a</span> & <span class="n">b</span>    <span class="c"># intersection {2, 3}</span>
-<span class="n">a</span> - <span class="n">b</span>    <span class="c"># difference   {1}</span>
-<span class="n">a</span> ^ <span class="n">b</span>    <span class="c"># symmetric difference {1, 4}</span>
-<span class="n">a</span> <= <span class="n">b</span>   <span class="c"># subset test</span></code></pre>
+<pre class="run"><code><span class="n">a</span>, <span class="n">b</span> = {<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>}, {<span class="n">2</span>, <span class="n">3</span>, <span class="n">4</span>}
+<span class="k">print</span>(<span class="n">a</span> | <span class="n">b</span>)    <span class="c"># union            {1, 2, 3, 4}</span>
+<span class="k">print</span>(<span class="n">a</span> & <span class="n">b</span>)    <span class="c"># intersection     {2, 3}</span>
+<span class="k">print</span>(<span class="n">a</span> - <span class="n">b</span>)    <span class="c"># difference       {1}</span>
+<span class="k">print</span>(<span class="n">a</span> ^ <span class="n">b</span>)    <span class="c"># symmetric diff   {1, 4}</span>
+<span class="k">print</span>(<span class="n">a</span> <= <span class="n">b</span>)   <span class="c"># subset test      False</span></code></pre>
 <p><code>frozenset</code> is the immutable, hashable version — usable as a dict key or an element of another set. Sets and their comprehensions (<code>{x*x for x in nums}</code>) are the idiomatic way to dedup and to test overlap between collections.</p>
 </section>
 
 <section id="files">
 <h2>12. File Handling</h2>
 <p>Always use the <code>with</code> statement — it guarantees the file is closed even if an error occurs.</p>
-<pre><code><span class="k">with</span> <span class="f">open</span>(<span class="s">"data.txt"</span>, <span class="s">"r"</span>, encoding=<span class="s">"utf-8"</span>) <span class="k">as</span> <span class="n">f</span>:
+<pre class="run"><code><span class="c"># the playground has an in-memory filesystem — write a file first</span>
+<span class="k">with</span> <span class="f">open</span>(<span class="s">"data.txt"</span>, <span class="s">"w"</span>) <span class="k">as</span> <span class="n">f</span>:
+    <span class="n">f</span>.<span class="f">write</span>(<span class="s">"line one\nline two\n"</span>)
+
+<span class="k">with</span> <span class="f">open</span>(<span class="s">"data.txt"</span>, <span class="s">"r"</span>, encoding=<span class="s">"utf-8"</span>) <span class="k">as</span> <span class="n">f</span>:
     <span class="n">content</span> = <span class="n">f</span>.<span class="f">read</span>()        <span class="c"># whole file as one string</span>
+<span class="k">print</span>(<span class="f">repr</span>(<span class="n">content</span>))
 
 <span class="k">with</span> <span class="f">open</span>(<span class="s">"data.txt"</span>) <span class="k">as</span> <span class="n">f</span>:
     <span class="k">for</span> <span class="n">line</span> <span class="k">in</span> <span class="n">f</span>:            <span class="c"># memory-efficient — streams line by line</span>
@@ -777,31 +869,34 @@ Point = <span class="f">namedtuple</span>(<span class="s">"Point"</span>, [<span
 </table>
 
 <h3>Writing</h3>
-<pre><code><span class="k">with</span> <span class="f">open</span>(<span class="s">"out.txt"</span>, <span class="s">"w"</span>) <span class="k">as</span> <span class="n">f</span>:
+<pre class="run"><code><span class="k">with</span> <span class="f">open</span>(<span class="s">"out.txt"</span>, <span class="s">"w"</span>) <span class="k">as</span> <span class="n">f</span>:
     <span class="n">f</span>.<span class="f">write</span>(<span class="s">"one line\n"</span>)     <span class="c"># write does NOT add a newline</span>
-    <span class="n">f</span>.<span class="f">writelines</span>([<span class="s">"a\n"</span>, <span class="s">"b\n"</span>])</code></pre>
+    <span class="n">f</span>.<span class="f">writelines</span>([<span class="s">"a\n"</span>, <span class="s">"b\n"</span>])
+<span class="k">print</span>(<span class="f">open</span>(<span class="s">"out.txt"</span>).<span class="f">read</span>())</code></pre>
 
 <h3>pathlib — the modern path API</h3>
-<pre><code><span class="k">from</span> pathlib <span class="k">import</span> Path
-<span class="n">p</span> = <span class="f">Path</span>(<span class="s">"logs"</span>) / <span class="s">"app.txt"</span>   <span class="c"># / operator joins paths</span>
-<span class="n">p</span>.<span class="f">exists</span>(), <span class="n">p</span>.<span class="n">suffix</span>, <span class="n">p</span>.<span class="n">stem</span>, <span class="n">p</span>.<span class="n">parent</span>
-<span class="n">text</span> = <span class="n">p</span>.<span class="f">read_text</span>(encoding=<span class="s">"utf-8"</span>)  <span class="c"># one-liner read</span>
-<span class="n">p</span>.<span class="f">write_text</span>(<span class="s">"hi"</span>)               <span class="c"># one-liner write</span></code></pre>
+<pre class="run"><code><span class="k">from</span> pathlib <span class="k">import</span> Path
+<span class="n">p</span> = <span class="f">Path</span>(<span class="s">"app.txt"</span>)
+<span class="n">p</span>.<span class="f">write_text</span>(<span class="s">"hi"</span>)               <span class="c"># one-liner write</span>
+<span class="k">print</span>(<span class="n">p</span>.<span class="f">exists</span>(), <span class="n">p</span>.<span class="n">suffix</span>, <span class="n">p</span>.<span class="n">stem</span>)   <span class="c"># True .txt app</span>
+<span class="k">print</span>(<span class="n">p</span>.<span class="f">read_text</span>(encoding=<span class="s">"utf-8"</span>))  <span class="c"># one-liner read → hi</span></code></pre>
 
 <h3>Structured formats</h3>
-<pre><code><span class="k">import</span> json
+<pre class="run"><code><span class="k">import</span> json
 <span class="n">data</span> = json.<span class="f">loads</span>(<span class="s">'{"a": 1}'</span>)    <span class="c"># str → dict   (load() from a file)</span>
-<span class="n">text</span> = json.<span class="f">dumps</span>(<span class="n">data</span>, indent=<span class="n">2</span>)  <span class="c"># dict → str   (dump() to a file)</span>
+<span class="k">print</span>(<span class="n">data</span>)                       <span class="c"># {'a': 1}</span>
+<span class="k">print</span>(json.<span class="f">dumps</span>(<span class="n">data</span>, indent=<span class="n">2</span>))  <span class="c"># dict → str   (dump() to a file)</span>
 
-<span class="k">import</span> csv
-<span class="k">with</span> <span class="f">open</span>(<span class="s">"t.csv"</span>, newline=<span class="s">""</span>) <span class="k">as</span> <span class="n">f</span>:
-    <span class="k">for</span> <span class="n">row</span> <span class="k">in</span> csv.<span class="f">DictReader</span>(<span class="n">f</span>):  <span class="c"># each row is a dict keyed by header</span>
-        <span class="k">print</span>(<span class="n">row</span>[<span class="s">"name"</span>])</code></pre>
+<span class="k">import</span> csv, io
+<span class="n">buf</span> = io.<span class="f">StringIO</span>(<span class="s">"name,age\nAda,36\nBob,40\n"</span>)
+<span class="k">for</span> <span class="n">row</span> <span class="k">in</span> csv.<span class="f">DictReader</span>(<span class="n">buf</span>):  <span class="c"># each row is a dict keyed by header</span>
+    <span class="k">print</span>(<span class="n">row</span>[<span class="s">"name"</span>], <span class="n">row</span>[<span class="s">"age"</span>])</code></pre>
 </section>
 
 <section id="exceptions">
 <h2>13. Exception Handling</h2>
-<pre><code><span class="k">try</span>:
+<pre class="run"><code><span class="n">x</span> = <span class="n">0</span>
+<span class="k">try</span>:
     <span class="n">result</span> = <span class="n">10</span> / <span class="n">x</span>
 <span class="k">except</span> ZeroDivisionError:
     <span class="k">print</span>(<span class="s">"cannot divide by zero"</span>)
@@ -813,22 +908,23 @@ Point = <span class="f">namedtuple</span>(<span class="s">"Point"</span>, [<span
     <span class="k">print</span>(<span class="s">"always runs — cleanup"</span>)</code></pre>
 
 <h3>Raising and re-raising</h3>
-<pre><code><span class="k">if</span> <span class="n">age</span> < <span class="n">0</span>:
-    <span class="k">raise</span> <span class="f">ValueError</span>(<span class="s">f"age must be non-negative, got {age}"</span>)
-
+<pre class="run"><code><span class="n">age</span> = -<span class="n">1</span>
 <span class="k">try</span>:
-    <span class="f">risky</span>()
-<span class="k">except</span> Exception <span class="k">as</span> <span class="n">e</span>:
-    <span class="f">log</span>(<span class="n">e</span>)
-    <span class="k">raise</span>                    <span class="c"># re-raise the same exception, keeping traceback</span>
-
-<span class="k">raise</span> <span class="f">RuntimeError</span>(<span class="s">"wrapped"</span>) <span class="k">from</span> <span class="n">e</span>   <span class="c"># chain with cause</span></code></pre>
+    <span class="k">if</span> <span class="n">age</span> < <span class="n">0</span>:
+        <span class="k">raise</span> <span class="f">ValueError</span>(<span class="s">f"age must be non-negative, got {age}"</span>)
+<span class="k">except</span> ValueError <span class="k">as</span> <span class="n">e</span>:
+    <span class="k">print</span>(<span class="s">"caught:"</span>, <span class="n">e</span>)
+    <span class="c"># bare 'raise' here would re-raise, keeping the traceback</span>
+    <span class="c"># 'raise RuntimeError(&quot;wrapped&quot;) from e' chains with a cause</span></code></pre>
 
 <h3>Custom exceptions</h3>
-<pre><code><span class="k">class</span> <span class="f">InsufficientFundsError</span>(<span class="f">Exception</span>):
+<pre class="run"><code><span class="k">class</span> <span class="f">InsufficientFundsError</span>(<span class="f">Exception</span>):
     <span class="s">"""Raised when a withdrawal exceeds the balance."""</span>
 
-<span class="k">raise</span> <span class="f">InsufficientFundsError</span>(<span class="s">"balance too low"</span>)</code></pre>
+<span class="k">try</span>:
+    <span class="k">raise</span> <span class="f">InsufficientFundsError</span>(<span class="s">"balance too low"</span>)
+<span class="k">except</span> <span class="f">InsufficientFundsError</span> <span class="k">as</span> <span class="n">e</span>:
+    <span class="k">print</span>(<span class="f">type</span>(<span class="n">e</span>).<span class="n">__name__</span>, <span class="s">"-"</span>, <span class="n">e</span>)</code></pre>
 
 <div class="callout warn"><strong>Anti-patterns to avoid:</strong> never write a bare <code>except:</code> (it swallows <code>KeyboardInterrupt</code> and system exits) — catch <code>Exception</code> at least. Don't use exceptions for ordinary control flow, and don't silence errors with an empty <code>except: pass</code>.</div>
 <div class="callout tip"><strong>EAFP vs LBYL:</strong> Python favors "Easier to Ask Forgiveness than Permission" — <code>try: d[k] except KeyError</code> — over "Look Before You Leap" checks. It's idiomatic and avoids race conditions.</div>
@@ -837,28 +933,30 @@ Point = <span class="f">namedtuple</span>(<span class="s">"Point"</span>, [<span
 <section id="modules">
 <h2>14. Modules</h2>
 <p>A <strong>module</strong> is any <code>.py</code> file; a <strong>package</strong> is a directory of modules (historically containing <code>__init__.py</code>).</p>
-<pre><code><span class="k">import</span> math
-math.<span class="f">sqrt</span>(<span class="n">16</span>)
+<pre class="run"><code><span class="k">import</span> math
+<span class="k">print</span>(math.<span class="f">sqrt</span>(<span class="n">16</span>))          <span class="c"># 4.0</span>
 
 <span class="k">from</span> math <span class="k">import</span> sqrt, pi        <span class="c"># bring specific names into scope</span>
+<span class="k">print</span>(<span class="f">sqrt</span>(<span class="n">9</span>), <span class="f">round</span>(pi, <span class="n">4</span>))    <span class="c"># 3.0 3.1416</span>
+
 <span class="k">from</span> math <span class="k">import</span> sqrt <span class="k">as</span> <span class="n">s</span>       <span class="c"># alias</span>
-<span class="k">import</span> numpy <span class="k">as</span> np             <span class="c"># conventional alias</span>
-<span class="k">from</span> mypackage.submod <span class="k">import</span> helper  <span class="c"># dotted path into a package</span></code></pre>
+<span class="k">print</span>(<span class="n">s</span>(<span class="n">25</span>))                   <span class="c"># 5.0</span>
+<span class="c"># third-party modules use the same syntax, e.g.  import numpy as np</span></code></pre>
 
 <h3>Your own module &amp; the __main__ guard</h3>
-<pre><code><span class="c"># file: calc.py</span>
+<pre class="run"><code><span class="c"># file: calc.py</span>
 <span class="k">def</span> <span class="f">add</span>(<span class="n">a</span>, <span class="n">b</span>): <span class="k">return</span> <span class="n">a</span> + <span class="n">b</span>
 
 <span class="k">if</span> <span class="n">__name__</span> == <span class="s">"__main__"</span>:
     <span class="c"># runs only when executed directly (python calc.py),</span>
     <span class="c"># NOT when imported by another module</span>
-    <span class="k">print</span>(<span class="f">add</span>(<span class="n">2</span>, <span class="n">3</span>))</code></pre>
+    <span class="k">print</span>(<span class="f">add</span>(<span class="n">2</span>, <span class="n">3</span>))   <span class="c"># 5</span></code></pre>
 <p>Python searches for modules along <code>sys.path</code> (the script's directory, then <code>PYTHONPATH</code>, then installed packages). Standard-library highlights worth knowing: <code>os</code>, <code>sys</code>, <code>datetime</code>, <code>collections</code>, <code>itertools</code>, <code>functools</code>, <code>random</code>, <code>re</code>, <code>json</code>, <code>pathlib</code>.</p>
 </section>
 
 <section id="oop">
 <h2>15. Object-Oriented Programming</h2>
-<pre><code><span class="k">class</span> <span class="f">Account</span>:
+<pre class="run"><code><span class="k">class</span> <span class="f">Account</span>:
     <span class="n">bank</span> = <span class="s">"Acme"</span>              <span class="c"># class attribute — shared by all instances</span>
 
     <span class="k">def</span> <span class="f">__init__</span>(<span class="n">self</span>, <span class="n">owner</span>, <span class="n">balance</span>=<span class="n">0</span>):
@@ -870,45 +968,55 @@ math.<span class="f">sqrt</span>(<span class="n">16</span>)
         <span class="k">return</span> <span class="n">self</span>.<span class="n">balance</span>
 
 <span class="n">acc</span> = <span class="f">Account</span>(<span class="s">"Ada"</span>, <span class="n">100</span>)
-<span class="n">acc</span>.<span class="f">deposit</span>(<span class="n">50</span>)             <span class="c"># 150</span></code></pre>
+<span class="k">print</span>(<span class="n">acc</span>.<span class="f">deposit</span>(<span class="n">50</span>))       <span class="c"># 150</span></code></pre>
 
 <h3>Inheritance &amp; super()</h3>
-<pre><code><span class="k">class</span> <span class="f">Savings</span>(<span class="f">Account</span>):
+<pre class="run"><code><span class="k">class</span> <span class="f">Account</span>:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="n">self</span>, <span class="n">owner</span>, <span class="n">balance</span>=<span class="n">0</span>):
+        <span class="n">self</span>.<span class="n">owner</span>, <span class="n">self</span>.<span class="n">balance</span> = <span class="n">owner</span>, <span class="n">balance</span>
+    <span class="k">def</span> <span class="f">deposit</span>(<span class="n">self</span>, <span class="n">amount</span>):
+        <span class="n">self</span>.<span class="n">balance</span> += <span class="n">amount</span>
+        <span class="k">return</span> <span class="n">self</span>.<span class="n">balance</span>
+
+<span class="k">class</span> <span class="f">Savings</span>(<span class="f">Account</span>):
     <span class="k">def</span> <span class="f">__init__</span>(<span class="n">self</span>, <span class="n">owner</span>, <span class="n">rate</span>):
         <span class="k">super</span>().<span class="f">__init__</span>(<span class="n">owner</span>)   <span class="c"># call parent constructor</span>
         <span class="n">self</span>.<span class="n">rate</span> = <span class="n">rate</span>
-
     <span class="k">def</span> <span class="f">deposit</span>(<span class="n">self</span>, <span class="n">amount</span>):     <span class="c"># override</span>
-        <span class="k">super</span>().<span class="f">deposit</span>(<span class="n">amount</span> * (<span class="n">1</span> + <span class="n">self</span>.<span class="n">rate</span>))</code></pre>
+        <span class="k">return</span> <span class="k">super</span>().<span class="f">deposit</span>(<span class="n">amount</span> * (<span class="n">1</span> + <span class="n">self</span>.<span class="n">rate</span>))
+
+<span class="n">s</span> = <span class="f">Savings</span>(<span class="s">"Ada"</span>, <span class="n">0.10</span>)
+<span class="k">print</span>(<span class="n">s</span>.<span class="f">deposit</span>(<span class="n">100</span>))   <span class="c"># 110.0</span></code></pre>
 
 <h3>Dunder methods (operator overloading)</h3>
-<pre><code><span class="k">class</span> <span class="f">Vector</span>:
+<pre class="run"><code><span class="k">class</span> <span class="f">Vector</span>:
     <span class="k">def</span> <span class="f">__init__</span>(<span class="n">self</span>, <span class="n">x</span>, <span class="n">y</span>): <span class="n">self</span>.<span class="n">x</span>, <span class="n">self</span>.<span class="n">y</span> = <span class="n">x</span>, <span class="n">y</span>
     <span class="k">def</span> <span class="f">__repr__</span>(<span class="n">self</span>):   <span class="k">return</span> <span class="s">f"Vector({self.x}, {self.y})"</span>
     <span class="k">def</span> <span class="f">__add__</span>(<span class="n">self</span>, <span class="n">o</span>): <span class="k">return</span> <span class="f">Vector</span>(<span class="n">self</span>.<span class="n">x</span>+<span class="n">o</span>.<span class="n">x</span>, <span class="n">self</span>.<span class="n">y</span>+<span class="n">o</span>.<span class="n">y</span>)
     <span class="k">def</span> <span class="f">__eq__</span>(<span class="n">self</span>, <span class="n">o</span>):  <span class="k">return</span> (<span class="n">self</span>.<span class="n">x</span>, <span class="n">self</span>.<span class="n">y</span>) == (<span class="n">o</span>.<span class="n">x</span>, <span class="n">o</span>.<span class="n">y</span>)
 
-<span class="f">Vector</span>(<span class="n">1</span>, <span class="n">2</span>) + <span class="f">Vector</span>(<span class="n">3</span>, <span class="n">4</span>)   <span class="c"># Vector(4, 6)</span></code></pre>
+<span class="k">print</span>(<span class="f">Vector</span>(<span class="n">1</span>, <span class="n">2</span>) + <span class="f">Vector</span>(<span class="n">3</span>, <span class="n">4</span>))   <span class="c"># Vector(4, 6)</span></code></pre>
 <p>Other key dunders: <code>__str__</code> (user-facing string), <code>__len__</code>, <code>__getitem__</code> (indexing), <code>__iter__</code>/<code>__next__</code> (iteration), <code>__call__</code> (make an instance callable), <code>__enter__</code>/<code>__exit__</code> (context managers).</p>
 
 <h3>Properties &amp; encapsulation</h3>
-<pre><code><span class="k">class</span> <span class="f">Circle</span>:
+<pre class="run"><code><span class="k">class</span> <span class="f">Circle</span>:
     <span class="k">def</span> <span class="f">__init__</span>(<span class="n">self</span>, <span class="n">r</span>): <span class="n">self</span>._<span class="n">r</span> = <span class="n">r</span>   <span class="c"># _leading underscore = "internal"</span>
     <span class="n">@property</span>
     <span class="k">def</span> <span class="f">area</span>(<span class="n">self</span>):            <span class="c"># call as circle.area, no parentheses</span>
         <span class="k">return</span> <span class="n">3.14159</span> * <span class="n">self</span>._<span class="n">r</span> ** <span class="n">2</span>
-    <span class="n">@area.setter</span>                <span class="c"># optional matching setter</span>
-    <span class="k">def</span> <span class="f">area</span>(<span class="n">self</span>, <span class="n">value</span>): ...</code></pre>
+
+<span class="n">c</span> = <span class="f">Circle</span>(<span class="n">2</span>)
+<span class="k">print</span>(<span class="n">c</span>.<span class="n">area</span>)   <span class="c"># 12.56636  — accessed like an attribute</span></code></pre>
 
 <h3>dataclasses — boilerplate-free classes</h3>
-<pre><code><span class="k">from</span> dataclasses <span class="k">import</span> dataclass
+<pre class="run"><code><span class="k">from</span> dataclasses <span class="k">import</span> dataclass
 <span class="n">@dataclass</span>
 <span class="k">class</span> <span class="f">Product</span>:
     <span class="n">name</span>: <span class="f">str</span>
     <span class="n">price</span>: <span class="f">float</span>
     <span class="n">qty</span>: <span class="f">int</span> = <span class="n">0</span>
 <span class="c"># auto-generates __init__, __repr__, __eq__</span>
-<span class="f">Product</span>(<span class="s">"pen"</span>, <span class="n">1.5</span>)</code></pre>
+<span class="k">print</span>(<span class="f">Product</span>(<span class="s">"pen"</span>, <span class="n">1.5</span>))   <span class="c"># Product(name='pen', price=1.5, qty=0)</span></code></pre>
 <div class="callout tip"><strong>Convention:</strong> Python has no true private members. One underscore <code>_x</code> signals "internal"; two leading underscores <code>__x</code> trigger name-mangling to avoid subclass clashes. There's also <code>@classmethod</code> (receives the class as <code>cls</code>) and <code>@staticmethod</code> (receives neither).</div>
 </section>
 
@@ -956,48 +1064,62 @@ python-dotenv</code></pre>
 <section id="comprehensions">
 <h2>18. Comprehensions</h2>
 <p>A concise, faster way to build a list, set, or dict from an iterable. Read left to right: <em>expression, then loop, then optional filter</em>.</p>
-<pre><code><span class="c"># list comprehension</span>
+<pre class="run"><code><span class="c"># list comprehension</span>
 <span class="n">squares</span> = [<span class="n">n</span>*<span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="k">in</span> <span class="f">range</span>(<span class="n">10</span>)]
-<span class="n">evens</span>   = [<span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="k">in</span> <span class="f">range</span>(<span class="n">10</span>) <span class="k">if</span> <span class="n">n</span> % <span class="n">2</span> == <span class="n">0</span>]   <span class="c"># with filter</span>
-<span class="n">labels</span>  = [<span class="s">"even"</span> <span class="k">if</span> <span class="n">n</span>%<span class="n">2</span>==<span class="n">0</span> <span class="k">else</span> <span class="s">"odd"</span> <span class="k">for</span> <span class="n">n</span> <span class="k">in</span> <span class="f">range</span>(<span class="n">5</span>)]  <span class="c"># ternary in the expr</span>
+<span class="k">print</span>(<span class="n">squares</span>)
+<span class="n">evens</span> = [<span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="k">in</span> <span class="f">range</span>(<span class="n">10</span>) <span class="k">if</span> <span class="n">n</span> % <span class="n">2</span> == <span class="n">0</span>]   <span class="c"># with filter</span>
+<span class="k">print</span>(<span class="n">evens</span>)
+<span class="n">labels</span> = [<span class="s">"even"</span> <span class="k">if</span> <span class="n">n</span>%<span class="n">2</span>==<span class="n">0</span> <span class="k">else</span> <span class="s">"odd"</span> <span class="k">for</span> <span class="n">n</span> <span class="k">in</span> <span class="f">range</span>(<span class="n">5</span>)]
+<span class="k">print</span>(<span class="n">labels</span>)
 
 <span class="c"># nested — flatten a 2D list</span>
+<span class="n">matrix</span> = [[<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>], [<span class="n">4</span>, <span class="n">5</span>, <span class="n">6</span>]]
 <span class="n">flat</span> = [<span class="n">x</span> <span class="k">for</span> <span class="n">row</span> <span class="k">in</span> <span class="n">matrix</span> <span class="k">for</span> <span class="n">x</span> <span class="k">in</span> <span class="n">row</span>]
+<span class="k">print</span>(<span class="n">flat</span>)                <span class="c"># [1, 2, 3, 4, 5, 6]</span>
 
 <span class="c"># dict and set comprehensions</span>
-<span class="n">sq_map</span> = {<span class="n">n</span>: <span class="n">n</span>*<span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="k">in</span> <span class="f">range</span>(<span class="n">5</span>)}
-<span class="n">uniq</span>   = {<span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="k">in</span> <span class="s">"mississippi"</span>}   <span class="c"># {'m','i','s','p'}</span></code></pre>
+<span class="k">print</span>({<span class="n">n</span>: <span class="n">n</span>*<span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="k">in</span> <span class="f">range</span>(<span class="n">5</span>)})
+<span class="k">print</span>({<span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="k">in</span> <span class="s">"mississippi"</span>})   <span class="c"># {'m','i','s','p'}</span></code></pre>
 <div class="callout tip"><strong>Style:</strong> keep comprehensions to a single, readable line. If you need two filters and a nested loop, a regular <code>for</code> loop is clearer. A comprehension with side effects (calling a function only for its effect) is an anti-pattern — use a loop.</div>
 </section>
 
 <section id="lambda">
 <h2>19. Lambda</h2>
 <p>An anonymous, single-expression function. <code>lambda args: expression</code> — no <code>return</code>, no statements, just one expression that becomes the result.</p>
-<pre><code><span class="n">square</span> = <span class="k">lambda</span> <span class="n">x</span>: <span class="n">x</span> * <span class="n">x</span>
-<span class="n">square</span>(<span class="n">5</span>)                 <span class="c"># 25</span>
-<span class="n">add</span> = <span class="k">lambda</span> <span class="n">a</span>, <span class="n">b</span>=<span class="n">0</span>: <span class="n">a</span> + <span class="n">b</span>   <span class="c"># defaults allowed</span></code></pre>
+<pre class="run"><code><span class="n">square</span> = <span class="k">lambda</span> <span class="n">x</span>: <span class="n">x</span> * <span class="n">x</span>
+<span class="k">print</span>(<span class="n">square</span>(<span class="n">5</span>))          <span class="c"># 25</span>
+<span class="n">add</span> = <span class="k">lambda</span> <span class="n">a</span>, <span class="n">b</span>=<span class="n">0</span>: <span class="n">a</span> + <span class="n">b</span>   <span class="c"># defaults allowed</span>
+<span class="k">print</span>(<span class="n">add</span>(<span class="n">3</span>), <span class="n">add</span>(<span class="n">3</span>, <span class="n">4</span>))   <span class="c"># 3 7</span></code></pre>
 <p>Their real use is as short throwaway functions passed to other functions:</p>
-<pre><code><span class="n">people</span>.<span class="f">sort</span>(key=<span class="k">lambda</span> <span class="n">p</span>: <span class="n">p</span>.<span class="n">age</span>)          <span class="c"># sort by a computed key</span>
-<span class="f">max</span>(<span class="n">words</span>, key=<span class="k">lambda</span> <span class="n">w</span>: <span class="f">len</span>(<span class="n">w</span>))          <span class="c"># longest word</span>
-<span class="f">sorted</span>(<span class="n">items</span>, key=<span class="k">lambda</span> <span class="n">t</span>: (<span class="n">t</span>[<span class="n">1</span>], <span class="n">t</span>[<span class="n">0</span>]))  <span class="c"># multi-key sort</span></code></pre>
+<pre class="run"><code><span class="k">from</span> collections <span class="k">import</span> namedtuple
+P = <span class="f">namedtuple</span>(<span class="s">"P"</span>, <span class="s">"name age"</span>)
+<span class="n">people</span> = [<span class="f">P</span>(<span class="s">"Ada"</span>, <span class="n">36</span>), <span class="f">P</span>(<span class="s">"Bob"</span>, <span class="n">28</span>)]
+<span class="n">people</span>.<span class="f">sort</span>(key=<span class="k">lambda</span> <span class="n">p</span>: <span class="n">p</span>.<span class="n">age</span>)          <span class="c"># sort by a computed key</span>
+<span class="k">print</span>([<span class="n">p</span>.<span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="k">in</span> <span class="n">people</span>])          <span class="c"># ['Bob', 'Ada']</span>
+
+<span class="n">words</span> = [<span class="s">"hi"</span>, <span class="s">"hello"</span>, <span class="s">"hey"</span>]
+<span class="k">print</span>(<span class="f">max</span>(<span class="n">words</span>, key=<span class="k">lambda</span> <span class="n">w</span>: <span class="f">len</span>(<span class="n">w</span>)))   <span class="c"># hello</span>
+
+<span class="n">items</span> = [(<span class="n">1</span>, <span class="s">"b"</span>), (<span class="n">1</span>, <span class="s">"a"</span>), (<span class="n">0</span>, <span class="s">"z"</span>)]
+<span class="k">print</span>(<span class="f">sorted</span>(<span class="n">items</span>, key=<span class="k">lambda</span> <span class="n">t</span>: (<span class="n">t</span>[<span class="n">1</span>], <span class="n">t</span>[<span class="n">0</span>])))  <span class="c"># multi-key sort</span></code></pre>
 <div class="callout warn"><strong>Don't</strong> assign a lambda to a name to reuse it (<code>f = lambda x: ...</code>) — just use <code>def</code>, which gives a proper name in tracebacks. Lambdas shine only when inline and disposable.</div>
 </section>
 
 <section id="mapfilter">
 <h2>20. map / filter</h2>
 <p><code>map</code> applies a function to every item; <code>filter</code> keeps items where a predicate is true. Both return lazy iterators, so wrap in <code>list()</code> to materialize.</p>
-<pre><code><span class="n">nums</span> = [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">4</span>]
-<span class="f">list</span>(<span class="f">map</span>(<span class="k">lambda</span> <span class="n">x</span>: <span class="n">x</span>*<span class="n">x</span>, <span class="n">nums</span>))          <span class="c"># [1, 4, 9, 16]</span>
-<span class="f">list</span>(<span class="f">filter</span>(<span class="k">lambda</span> <span class="n">x</span>: <span class="n">x</span> % <span class="n">2</span> == <span class="n">0</span>, <span class="n">nums</span>))  <span class="c"># [2, 4]</span>
-<span class="f">list</span>(<span class="f">map</span>(<span class="f">str</span>.<span class="f">upper</span>, [<span class="s">"a"</span>, <span class="s">"b"</span>]))          <span class="c"># ['A', 'B'] — pass any callable</span>
-<span class="f">list</span>(<span class="f">map</span>(<span class="k">lambda</span> <span class="n">a</span>, <span class="n">b</span>: <span class="n">a</span>+<span class="n">b</span>, [<span class="n">1</span>,<span class="n">2</span>], [<span class="n">10</span>,<span class="n">20</span>]))  <span class="c"># [11, 22] — multiple iterables</span></code></pre>
+<pre class="run"><code><span class="n">nums</span> = [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">4</span>]
+<span class="k">print</span>(<span class="f">list</span>(<span class="f">map</span>(<span class="k">lambda</span> <span class="n">x</span>: <span class="n">x</span>*<span class="n">x</span>, <span class="n">nums</span>)))          <span class="c"># [1, 4, 9, 16]</span>
+<span class="k">print</span>(<span class="f">list</span>(<span class="f">filter</span>(<span class="k">lambda</span> <span class="n">x</span>: <span class="n">x</span> % <span class="n">2</span> == <span class="n">0</span>, <span class="n">nums</span>)))  <span class="c"># [2, 4]</span>
+<span class="k">print</span>(<span class="f">list</span>(<span class="f">map</span>(<span class="f">str</span>.<span class="f">upper</span>, [<span class="s">"a"</span>, <span class="s">"b"</span>])))          <span class="c"># ['A', 'B']</span>
+<span class="k">print</span>(<span class="f">list</span>(<span class="f">map</span>(<span class="k">lambda</span> <span class="n">a</span>, <span class="n">b</span>: <span class="n">a</span>+<span class="n">b</span>, [<span class="n">1</span>,<span class="n">2</span>], [<span class="n">10</span>,<span class="n">20</span>])))  <span class="c"># [11, 22]</span></code></pre>
 <div class="callout tip"><strong>Pythonic take:</strong> a comprehension is usually clearer than <code>map</code>/<code>filter</code> with a lambda: <code>[x*x for x in nums]</code> beats <code>map(lambda x: x*x, nums)</code>. Reach for <code>map</code> when you already have a named function to apply (<code>map(int, tokens)</code>). Also look at <code>functools.reduce</code> for folding a sequence into one value.</div>
 </section>
 
 <section id="generators">
 <h2>21. Generators</h2>
 <p>A generator produces values <strong>lazily</strong>, one at a time, holding only the current value in memory — ideal for large or infinite sequences. Any function with <code>yield</code> is a generator function.</p>
-<pre><code><span class="k">def</span> <span class="f">countdown</span>(<span class="n">n</span>):
+<pre class="run"><code><span class="k">def</span> <span class="f">countdown</span>(<span class="n">n</span>):
     <span class="k">while</span> <span class="n">n</span> > <span class="n">0</span>:
         <span class="k">yield</span> <span class="n">n</span>          <span class="c"># pauses here, resumes on next()</span>
         <span class="n">n</span> -= <span class="n">1</span>
@@ -1006,19 +1128,22 @@ python-dotenv</code></pre>
     <span class="k">print</span>(<span class="n">x</span>)
 
 <span class="n">gen</span> = <span class="f">countdown</span>(<span class="n">3</span>)
-<span class="f">next</span>(<span class="n">gen</span>)                 <span class="c"># 3   — pull one value manually</span></code></pre>
+<span class="k">print</span>(<span class="f">next</span>(<span class="n">gen</span>))          <span class="c"># 3   — pull one value manually</span></code></pre>
 
 <h3>Generator expressions</h3>
 <p>Like a list comprehension but with parentheses — evaluated lazily, no intermediate list built.</p>
-<pre><code><span class="n">total</span> = <span class="f">sum</span>(<span class="n">n</span>*<span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="k">in</span> <span class="f">range</span>(<span class="n">1_000_000</span>))  <span class="c"># no million-item list in memory</span>
-<span class="n">first_big</span> = <span class="f">next</span>(<span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="k">in</span> <span class="n">data</span> <span class="k">if</span> <span class="n">x</span> > <span class="n">1000</span>)  <span class="c"># stop at first match</span></code></pre>
+<pre class="run"><code><span class="n">total</span> = <span class="f">sum</span>(<span class="n">n</span>*<span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="k">in</span> <span class="f">range</span>(<span class="n">1_000_000</span>))  <span class="c"># no million-item list in memory</span>
+<span class="k">print</span>(<span class="n">total</span>)                                   <span class="c"># 333332833333500000</span>
+<span class="n">data</span> = [<span class="n">5</span>, <span class="n">50</span>, <span class="n">500</span>, <span class="n">5000</span>]
+<span class="n">first_big</span> = <span class="f">next</span>(<span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="k">in</span> <span class="n">data</span> <span class="k">if</span> <span class="n">x</span> > <span class="n">1000</span>)  <span class="c"># stop at first match</span>
+<span class="k">print</span>(<span class="n">first_big</span>)                               <span class="c"># 5000</span></code></pre>
 <div class="callout"><strong>Why care:</strong> generators let you process a 10 GB file line by line, or model an infinite stream, without ever loading it all. They're exhausted after one pass — iterate again and you get nothing. The <code>itertools</code> module (<code>count</code>, <code>cycle</code>, <code>islice</code>, <code>chain</code>, <code>groupby</code>) is built around this model.</div>
 </section>
 
 <section id="decorators">
 <h2>22. Decorators</h2>
 <p>A decorator is a function that takes a function and returns a modified function — a clean way to wrap behavior (logging, timing, caching, auth) around existing code. <code>@name</code> is syntactic sugar.</p>
-<pre><code><span class="k">import</span> functools
+<pre class="run"><code><span class="k">import</span> functools
 
 <span class="k">def</span> <span class="f">timer</span>(<span class="n">func</span>):
     <span class="n">@functools.wraps</span>(<span class="n">func</span>)          <span class="c"># preserves func's name/docstring</span>
@@ -1032,12 +1157,14 @@ python-dotenv</code></pre>
 
 <span class="n">@timer</span>
 <span class="k">def</span> <span class="f">slow</span>():
-    <span class="k">return</span> <span class="f">sum</span>(<span class="f">range</span>(<span class="n">10_000_000</span>))
+    <span class="k">return</span> <span class="f">sum</span>(<span class="f">range</span>(<span class="n">1_000_000</span>))
 <span class="c"># @timer means:  slow = timer(slow)</span>
-<span class="f">slow</span>()          <span class="c"># prints "slow took 0.12s"</span></code></pre>
+<span class="k">print</span>(<span class="f">slow</span>())   <span class="c"># prints timing line, then 499999500000</span></code></pre>
 
 <h3>Decorators with arguments</h3>
-<pre><code><span class="k">def</span> <span class="f">repeat</span>(<span class="n">times</span>):              <span class="c"># outer takes the argument</span>
+<pre class="run"><code><span class="k">import</span> functools
+
+<span class="k">def</span> <span class="f">repeat</span>(<span class="n">times</span>):              <span class="c"># outer takes the argument</span>
     <span class="k">def</span> <span class="f">deco</span>(<span class="n">func</span>):
         <span class="n">@functools.wraps</span>(<span class="n">func</span>)
         <span class="k">def</span> <span class="f">wrapper</span>(*<span class="n">a</span>, **<span class="n">k</span>):
@@ -1048,38 +1175,44 @@ python-dotenv</code></pre>
     <span class="k">return</span> <span class="n">deco</span>
 
 <span class="n">@repeat</span>(<span class="n">3</span>)
-<span class="k">def</span> <span class="f">greet</span>(): <span class="k">print</span>(<span class="s">"hi"</span>)</code></pre>
+<span class="k">def</span> <span class="f">greet</span>(): <span class="k">print</span>(<span class="s">"hi"</span>)
+
+<span class="f">greet</span>()   <span class="c"># prints hi three times</span></code></pre>
 <p>Common built-in decorators: <code>@property</code>, <code>@staticmethod</code>, <code>@classmethod</code>, and <code>@functools.lru_cache</code> (memoize results automatically).</p>
 </section>
 
 <section id="contextmanagers">
 <h2>23. Context Managers</h2>
 <p>A context manager defines setup and teardown around a block via the <code>with</code> statement — guaranteeing cleanup even on exceptions. You've already used one: <code>open()</code>.</p>
-<pre><code><span class="k">with</span> <span class="f">open</span>(<span class="s">"f.txt"</span>) <span class="k">as</span> <span class="n">f</span>:
+<pre class="run"><code><span class="k">with</span> <span class="f">open</span>(<span class="s">"f.txt"</span>, <span class="s">"w"</span>) <span class="k">as</span> <span class="n">f</span>:
+    <span class="n">f</span>.<span class="f">write</span>(<span class="s">"hello from a file"</span>)
+
+<span class="k">with</span> <span class="f">open</span>(<span class="s">"f.txt"</span>) <span class="k">as</span> <span class="n">f</span>:
     <span class="n">data</span> = <span class="n">f</span>.<span class="f">read</span>()
-<span class="c"># file is closed here automatically, even if read() raised</span>
+<span class="k">print</span>(<span class="n">data</span>)   <span class="c"># file is closed automatically, even if read() raised</span>
 
 <span class="c"># manage several at once</span>
+<span class="k">with</span> <span class="f">open</span>(<span class="s">"in.txt"</span>, <span class="s">"w"</span>) <span class="k">as</span> <span class="n">s</span>: <span class="n">s</span>.<span class="f">write</span>(<span class="s">"copy me"</span>)
 <span class="k">with</span> <span class="f">open</span>(<span class="s">"in.txt"</span>) <span class="k">as</span> <span class="n">src</span>, <span class="f">open</span>(<span class="s">"out.txt"</span>, <span class="s">"w"</span>) <span class="k">as</span> <span class="n">dst</span>:
-    <span class="n">dst</span>.<span class="f">write</span>(<span class="n">src</span>.<span class="f">read</span>())</code></pre>
+    <span class="n">dst</span>.<span class="f">write</span>(<span class="n">src</span>.<span class="f">read</span>())
+<span class="k">print</span>(<span class="f">open</span>(<span class="s">"out.txt"</span>).<span class="f">read</span>())   <span class="c"># copy me</span></code></pre>
 
 <h3>Writing one — the class protocol</h3>
-<pre><code><span class="k">class</span> <span class="f">Timer</span>:
+<pre class="run"><code><span class="k">import</span> time
+<span class="k">class</span> <span class="f">Timer</span>:
     <span class="k">def</span> <span class="f">__enter__</span>(<span class="n">self</span>):          <span class="c"># runs at 'with' entry; return value → 'as' target</span>
-        <span class="k">import</span> time
         <span class="n">self</span>.<span class="n">start</span> = time.<span class="f">perf_counter</span>()
         <span class="k">return</span> <span class="n">self</span>
     <span class="k">def</span> <span class="f">__exit__</span>(<span class="n">self</span>, <span class="n">exc_type</span>, <span class="n">exc_val</span>, <span class="n">tb</span>):   <span class="c"># runs at exit, even on error</span>
-        <span class="k">import</span> time
         <span class="n">self</span>.<span class="n">elapsed</span> = time.<span class="f">perf_counter</span>() - <span class="n">self</span>.<span class="n">start</span>
         <span class="c"># return True to SUPPRESS an exception; False/None re-raises it</span>
 
 <span class="k">with</span> <span class="f">Timer</span>() <span class="k">as</span> <span class="n">t</span>:
-    <span class="f">do_work</span>()
-<span class="k">print</span>(<span class="n">t</span>.<span class="n">elapsed</span>)</code></pre>
+    <span class="f">sum</span>(<span class="f">range</span>(<span class="n">100000</span>))
+<span class="k">print</span>(<span class="s">f"elapsed: {t.elapsed:.4f}s"</span>)</code></pre>
 
 <h3>The easy way — contextlib</h3>
-<pre><code><span class="k">from</span> contextlib <span class="k">import</span> contextmanager
+<pre class="run"><code><span class="k">from</span> contextlib <span class="k">import</span> contextmanager
 
 <span class="n">@contextmanager</span>
 <span class="k">def</span> <span class="f">tag</span>(<span class="n">name</span>):
@@ -1088,7 +1221,7 @@ python-dotenv</code></pre>
     <span class="k">print</span>(<span class="s">f"&lt;/{name}&gt;"</span>)
 
 <span class="k">with</span> <span class="f">tag</span>(<span class="s">"b"</span>):
-    <span class="k">print</span>(<span class="s">"bold"</span>)    <span class="c"># prints &lt;b&gt; / bold / &lt;/b&gt;</span></code></pre>
+    <span class="k">print</span>(<span class="s">"bold"</span>)    <span class="c"># prints &lt;b&gt; then bold then &lt;/b&gt;</span></code></pre>
 <div class="callout tip"><strong>Use them for</strong> any acquire/release pair: files, network sockets, database transactions, locks (<code>with lock:</code>), or temporarily changing state. Put the <code>yield</code> inside a <code>try/finally</code> if cleanup must run even when the block raises.</div>
 </section>
 
@@ -1098,47 +1231,120 @@ python-dotenv</code></pre>
   <p>Agents are software. Before the AI parts, you need the habits that keep any codebase shippable: version control, HTTP, auth, config, logging, and tests.</p>
 </div>
 <section id="phase2">
-<h3>Git &amp; GitHub</h3>
-<p>Version control is non-negotiable. Learn the everyday loop and branching.</p>
-<pre><code>git init
-git add .              <span class="c"># stage changes</span>
-git commit -m <span class="s">"message"</span>
-git switch -c feature   <span class="c"># create & switch to a branch</span>
-git push origin feature
-<span class="c"># then open a Pull Request on GitHub for review & merge</span></code></pre>
-<p>Understand: commits, branches, merge vs rebase, pull requests, and resolving conflicts. Keep a <code>.gitignore</code> (never commit <code>venv/</code>, <code>.env</code>, secrets).</p>
+<h3>Git</h3>
+<p>Git is a distributed version-control system: it tracks every change as a <em>commit</em>, lets you branch off to work in isolation, and merge back. It's the safety net that makes experimentation safe and collaboration possible.</p>
+<pre><code>git init                 <span class="c"># start tracking a folder</span>
+git status               <span class="c"># what changed?</span>
+git add .                <span class="c"># stage changes for the next commit</span>
+git commit -m <span class="s">"message"</span>   <span class="c"># snapshot the staged changes</span>
+git log --oneline        <span class="c"># history</span>
+git switch -c feature    <span class="c"># create & switch to a branch</span>
+git merge feature        <span class="c"># fold a branch back into main</span></code></pre>
+<p>Learn the difference between <strong>merge</strong> (preserves history, adds a merge commit) and <strong>rebase</strong> (replays your commits on top of another branch for a linear history). Always keep a <code>.gitignore</code> so you never commit <code>venv/</code>, <code>.env</code>, secrets, or build artifacts.</p>
 
-<h3>The web layer: HTTP, REST, JSON</h3>
-<p><strong>HTTP</strong> is request/response over methods (<code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>) and status codes (2xx ok, 4xx client error, 5xx server error). A <strong>REST API</strong> exposes resources at URLs and speaks <strong>JSON</strong>, which maps cleanly onto Python dicts/lists.</p>
-<pre><code><span class="k">import</span> requests
+<h3>GitHub</h3>
+<p>GitHub hosts Git repositories in the cloud and adds collaboration on top: <strong>pull requests</strong> (propose and review changes before they merge), issues, releases, and Actions for CI/CD. The everyday remote loop:</p>
+<pre><code>git remote add origin https://github.com/you/repo.git
+git push -u origin feature   <span class="c"># publish your branch</span>
+<span class="c"># open a Pull Request on github.com → review → merge → delete branch</span>
+git pull                     <span class="c"># fetch + merge others' changes</span></code></pre>
+<p>For agents you'll also use GitHub as a <em>tool target</em> (opening PRs, reading issues) via its API — see Phase 4.</p>
+
+<h3>HTTP</h3>
+<p>HTTP is the request/response protocol the whole web runs on. A request has a <strong>method</strong>, a URL, headers, and an optional body; a response has a <strong>status code</strong> and body.</p>
+<table>
+<tr><th>Method</th><th>Meaning</th><th>Status ranges</th></tr>
+<tr><td><code>GET</code></td><td>read a resource</td><td><strong>2xx</strong> success</td></tr>
+<tr><td><code>POST</code></td><td>create / perform an action</td><td><strong>3xx</strong> redirect</td></tr>
+<tr><td><code>PUT</code>/<code>PATCH</code></td><td>update</td><td><strong>4xx</strong> client error (401, 404, 429)</td></tr>
+<tr><td><code>DELETE</code></td><td>remove</td><td><strong>5xx</strong> server error</td></tr>
+</table>
+<p>Key headers you'll set constantly: <code>Authorization</code> (credentials), <code>Content-Type</code> (e.g. <code>application/json</code>), and <code>Accept</code>.</p>
+
+<h3>REST APIs</h3>
+<p>REST is a convention for exposing <em>resources</em> at URLs and acting on them with HTTP methods. It's stateless (every request carries its own auth) and predictable, which is why nearly every service offers a REST API.</p>
+<pre><code><span class="c"># GET  /users/{id}      → fetch one user</span>
+<span class="c"># POST /users          → create a user   (body = JSON)</span>
+<span class="c"># PATCH /users/{id}     → update fields</span>
+<span class="c"># DELETE /users/{id}    → remove</span>
+<span class="k">import</span> requests
 <span class="n">r</span> = requests.<span class="f">get</span>(<span class="s">"https://api.github.com/users/torvalds"</span>)
-<span class="n">r</span>.<span class="n">status_code</span>       <span class="c"># 200</span>
-<span class="n">data</span> = <span class="n">r</span>.<span class="f">json</span>()      <span class="c"># dict parsed from JSON body</span></code></pre>
+<span class="k">print</span>(<span class="n">r</span>.<span class="n">status_code</span>)   <span class="c"># 200</span>
+<span class="n">data</span> = <span class="n">r</span>.<span class="f">json</span>()        <span class="c"># dict parsed from the JSON body</span></code></pre>
 
-<h3>Authentication: OAuth, JWT, webhooks</h3>
-<p><strong>Authentication</strong> proves who you are; <strong>authorization</strong> is what you may do. Two patterns you'll meet constantly:</p>
-<p><strong>OAuth 2.0</strong> — the "Log in with Google/Slack" flow. Your app never sees the password; it receives a scoped <em>access token</em> to call the API on the user's behalf. <strong>JWT</strong> (JSON Web Token) — a signed, self-contained token (<code>header.payload.signature</code>) the server can verify without a database lookup. <strong>Webhooks</strong> invert the model: instead of you polling an API, the service POSTs an event to a URL you expose (e.g. "a message was posted in Slack").</p>
+<h3>JSON</h3>
+<p>JSON is the universal data-interchange format for APIs. It maps almost one-to-one onto Python: object→<code>dict</code>, array→<code>list</code>, string/number/bool/null→<code>str</code>/<code>int|float</code>/<code>bool</code>/<code>None</code>.</p>
+<pre class="run"><code><span class="k">import</span> json
+<span class="n">payload</span> = {<span class="s">"name"</span>: <span class="s">"Ada"</span>, <span class="s">"roles"</span>: [<span class="s">"admin"</span>, <span class="s">"dev"</span>], <span class="s">"active"</span>: <span class="k">True</span>}
+<span class="n">text</span> = json.<span class="f">dumps</span>(<span class="n">payload</span>)      <span class="c"># dict → JSON string (to send)</span>
+<span class="k">print</span>(<span class="n">text</span>)
+<span class="n">back</span> = json.<span class="f">loads</span>(<span class="n">text</span>)         <span class="c"># JSON string → dict (when received)</span>
+<span class="k">print</span>(<span class="n">back</span>[<span class="s">"roles"</span>][<span class="n">0</span>])         <span class="c"># admin</span></code></pre>
 
-<h3>Config, logging, testing, debugging</h3>
-<pre><code><span class="c"># environment variables keep secrets out of code</span>
-<span class="k">import</span> os
-<span class="k">from</span> dotenv <span class="k">import</span> load_dotenv     <span class="c"># reads a local .env file</span>
-<span class="f">load_dotenv</span>()
-<span class="n">key</span> = os.<span class="f">getenv</span>(<span class="s">"OPENAI_API_KEY"</span>)
+<h3>Authentication</h3>
+<p><strong>Authentication</strong> proves who you are; <strong>authorization</strong> decides what you may do. APIs authenticate you in a few common ways: an <strong>API key</strong> in a header, a <strong>bearer token</strong>, HTTP Basic auth, or a full OAuth flow. The golden rule: credentials live in environment variables, never in code or Git.</p>
 
-<span class="c"># logging beats print() — levels, timestamps, redirectable</span>
-<span class="k">import</span> logging
-logging.<span class="f">basicConfig</span>(level=logging.INFO)
-<span class="n">log</span> = logging.<span class="f">getLogger</span>(<span class="n">__name__</span>)
-<span class="n">log</span>.<span class="f">info</span>(<span class="s">"agent started"</span>)</code></pre>
-<pre><code><span class="c"># testing with pytest — the de facto standard</span>
+<h3>OAuth</h3>
+<p>OAuth 2.0 is the "Log in with Google/Slack/GitHub" delegation protocol. Your app never sees the user's password — instead the provider issues a scoped <em>access token</em> (and often a <em>refresh token</em>) that lets you act on the user's behalf, only within the scopes they approved.</p>
+<pre><code><span class="c"># the authorization-code flow, conceptually:</span>
+<span class="c"># 1. redirect user to provider's consent screen (with your client_id + scopes)</span>
+<span class="c"># 2. provider redirects back with a short-lived ?code=...</span>
+<span class="c"># 3. exchange that code (+ client_secret) for an access_token</span>
+<span class="c"># 4. call the API with:  Authorization: Bearer &lt;access_token&gt;</span></code></pre>
+
+<h3>JWT</h3>
+<p>A JSON Web Token is a signed, self-contained token in three dot-separated parts: <code>header.payload.signature</code>. Because it's cryptographically signed, a server can verify it without a database lookup — the token itself carries the claims (user id, expiry, scopes).</p>
+<pre><code><span class="c"># decoded payload (the middle part) looks like:</span>
+{ <span class="s">"sub"</span>: <span class="s">"user_123"</span>, <span class="s">"exp"</span>: <span class="n">1735689600</span>, <span class="s">"scope"</span>: <span class="s">"read:msgs"</span> }
+<span class="c"># NB: JWTs are signed, not encrypted — never put secrets in the payload</span></code></pre>
+
+<h3>Webhooks</h3>
+<p>Webhooks invert the usual polling model. Instead of you repeatedly asking "anything new?", the service <strong>POSTs an event to a URL you expose</strong> the moment something happens — a Slack message, a GitHub push, a Stripe payment. Your endpoint receives the JSON, verifies a signature, and reacts.</p>
+<pre><code><span class="c"># a minimal webhook receiver (FastAPI)</span>
+<span class="n">@app.post</span>(<span class="s">"/webhooks/slack"</span>)
+<span class="k">async def</span> <span class="f">on_event</span>(<span class="n">event</span>: <span class="f">dict</span>):
+    <span class="k">if</span> <span class="n">event</span>[<span class="s">"type"</span>] == <span class="s">"message"</span>:
+        <span class="f">handle</span>(<span class="n">event</span>)
+    <span class="k">return</span> {<span class="s">"ok"</span>: <span class="k">True</span>}     <span class="c"># respond fast (2xx) or the sender retries</span></code></pre>
+
+<h3>Environment variables</h3>
+<p>Environment variables keep configuration and secrets out of your code, so the same code runs in dev and prod with different settings. Load them from a local <code>.env</code> file (git-ignored) in development.</p>
+<pre><code><span class="k">import</span> os
+<span class="k">from</span> dotenv <span class="k">import</span> load_dotenv     <span class="c"># pip install python-dotenv</span>
+<span class="f">load_dotenv</span>()                       <span class="c"># reads .env into the environment</span>
+<span class="n">key</span> = os.<span class="f">getenv</span>(<span class="s">"OPENAI_API_KEY"</span>)   <span class="c"># None if unset — fail loudly if required</span></code></pre>
+
+<h3>Logging</h3>
+<p>Logging beats <code>print()</code>: it has severity levels, timestamps, and can be routed to files or log aggregators without touching your code. Use it from day one.</p>
+<pre class="run"><code><span class="k">import</span> logging
+logging.<span class="f">basicConfig</span>(level=logging.INFO,
+                    format=<span class="s">"%(asctime)s %(levelname)s %(message)s"</span>)
+<span class="n">log</span> = logging.<span class="f">getLogger</span>(<span class="s">"agent"</span>)
+<span class="n">log</span>.<span class="f">info</span>(<span class="s">"agent started"</span>)
+<span class="n">log</span>.<span class="f">warning</span>(<span class="s">"token budget at 80%%"</span>)
+<span class="n">log</span>.<span class="f">error</span>(<span class="s">"tool call failed"</span>)   <span class="c"># levels: DEBUG < INFO < WARNING < ERROR < CRITICAL</span></code></pre>
+
+<h3>Testing</h3>
+<p>Automated tests let you change code fearlessly. <code>pytest</code> is the de-facto standard: any function named <code>test_*</code> that <code>assert</code>s becomes a test. Tests matter doubly for agents, where you want to pin down tool behavior even when the LLM is non-deterministic.</p>
+<pre class="run"><code><span class="k">def</span> <span class="f">add</span>(<span class="n">a</span>, <span class="n">b</span>):
+    <span class="k">return</span> <span class="n">a</span> + <span class="n">b</span>
+
 <span class="k">def</span> <span class="f">test_add</span>():
     <span class="k">assert</span> <span class="f">add</span>(<span class="n">2</span>, <span class="n">3</span>) == <span class="n">5</span>
-<span class="c"># run:  pytest -q</span></code></pre>
-<p>For debugging, learn <code>breakpoint()</code> (drops into <code>pdb</code>) and your IDE's debugger — stepping through beats scattering prints.</p>
+    <span class="k">assert</span> <span class="f">add</span>(-<span class="n">1</span>, <span class="n">1</span>) == <span class="n">0</span>
+
+<span class="f">test_add</span>()               <span class="c"># run: `pytest -q`; here we call it directly</span>
+<span class="k">print</span>(<span class="s">"all tests passed"</span>)</code></pre>
+
+<h3>Debugging</h3>
+<p>When something breaks, reach for a debugger before scattering prints. <code>breakpoint()</code> drops you into <code>pdb</code> where you can inspect variables and step line by line; every IDE wraps this in a visual debugger. Read the traceback bottom-up — the last line is the actual error.</p>
+<pre><code><span class="k">def</span> <span class="f">process</span>(<span class="n">order</span>):
+    <span class="n">total</span> = <span class="n">order</span>[<span class="s">"qty"</span>] * <span class="n">order</span>[<span class="s">"price"</span>]
+    <span class="k">breakpoint</span>()          <span class="c"># pauses here: inspect `total`, step with n/s, continue with c</span>
+    <span class="k">return</span> <span class="n">total</span></code></pre>
 
 <h3>Project structure</h3>
-<p>A clean layout pays off the moment a project grows. A common agentic shape:</p>
+<p>A clean layout pays off the moment a project grows past one file. A common agentic shape separates concerns so each part can evolve independently:</p>
 <div class="ascii">project/
 ├── app.py          # entry point
 ├── agents/         # agent definitions
@@ -1155,41 +1361,93 @@ logging.<span class="f">basicConfig</span>(level=logging.INFO)
   <p>Agents need to store state, look up facts, and cache expensive results. Know one relational DB well, plus a document store and a cache.</p>
 </div>
 <section id="phase3">
-<h3>SQL — the core skill</h3>
-<pre><code><span class="k">SELECT</span> name, <span class="f">COUNT</span>(*) <span class="k">AS</span> orders
+<p>Agents need to store state, look up facts, and cache expensive results. Learn SQL deeply against one relational database, then get a feel for a document store and a cache. Below, each SQL clause gets its own note; the SQLite example at the end actually runs in the playground.</p>
+
+<h3>SELECT</h3>
+<p><code>SELECT</code> reads rows. Choose columns, filter with <code>WHERE</code>, and limit results. This is the clause you'll write most.</p>
+<pre><code><span class="k">SELECT</span> name, email          <span class="c">-- columns (or * for all)</span>
+<span class="k">FROM</span> customers
+<span class="k">WHERE</span> active = <span class="k">true</span> <span class="k">AND</span> country = <span class="s">'US'</span>
+<span class="k">LIMIT</span> <span class="n">10</span>;</code></pre>
+
+<h3>JOIN</h3>
+<p>A <code>JOIN</code> combines rows from two tables on a matching key. <strong>INNER JOIN</strong> keeps only matches; <strong>LEFT JOIN</strong> keeps all left rows and fills missing right values with NULL.</p>
+<pre><code><span class="k">SELECT</span> c.name, p.amount
 <span class="k">FROM</span> customers c
-<span class="k">JOIN</span> purchases p <span class="k">ON</span> p.customer_id = c.id
-<span class="k">WHERE</span> c.active = <span class="k">true</span>
-<span class="k">GROUP BY</span> name
-<span class="k">ORDER BY</span> orders <span class="k">DESC</span>;</code></pre>
-<p>Master: <code>SELECT</code>/<code>WHERE</code>, <code>JOIN</code> (inner/left), <code>GROUP BY</code> with aggregates, <code>ORDER BY</code>, and then the intermediate trio:</p>
-<pre><code><span class="c">-- CTE: name a subquery for readability</span>
-<span class="k">WITH</span> top_customers <span class="k">AS</span> (
+<span class="k">JOIN</span> purchases p <span class="k">ON</span> p.customer_id = c.id;   <span class="c">-- inner: only customers who purchased</span>
+
+<span class="k">SELECT</span> c.name, p.amount
+<span class="k">FROM</span> customers c
+<span class="k">LEFT JOIN</span> purchases p <span class="k">ON</span> p.customer_id = c.id;  <span class="c">-- all customers, NULL if none</span></code></pre>
+
+<h3>GROUP BY</h3>
+<p><code>GROUP BY</code> collapses rows that share a value into one, so you can apply aggregates (<code>COUNT</code>, <code>SUM</code>, <code>AVG</code>, <code>MIN</code>, <code>MAX</code>). Filter groups with <code>HAVING</code> (not <code>WHERE</code>).</p>
+<pre><code><span class="k">SELECT</span> customer_id, <span class="f">COUNT</span>(*) <span class="k">AS</span> orders, <span class="f">SUM</span>(amount) <span class="k">AS</span> spend
+<span class="k">FROM</span> purchases
+<span class="k">GROUP BY</span> customer_id
+<span class="k">HAVING</span> <span class="f">SUM</span>(amount) > <span class="n">1000</span>;   <span class="c">-- filter AFTER aggregating</span></code></pre>
+
+<h3>ORDER BY</h3>
+<p><code>ORDER BY</code> sorts the result. <code>ASC</code> (default) or <code>DESC</code>, and you can sort by multiple columns.</p>
+<pre><code><span class="k">SELECT</span> name, amount
+<span class="k">FROM</span> purchases
+<span class="k">ORDER BY</span> amount <span class="k">DESC</span>, name <span class="k">ASC</span>;</code></pre>
+
+<h3>Window functions</h3>
+<p>Window functions compute across a set of rows <em>related</em> to the current row — without collapsing them like <code>GROUP BY</code> does. Great for rankings, running totals, and per-group comparisons.</p>
+<pre><code><span class="k">SELECT</span> name, region, amount,
+  <span class="f">RANK</span>() <span class="k">OVER</span> (<span class="k">PARTITION BY</span> region <span class="k">ORDER BY</span> amount <span class="k">DESC</span>) <span class="k">AS</span> rnk,
+  <span class="f">SUM</span>(amount) <span class="k">OVER</span> (<span class="k">PARTITION BY</span> region) <span class="k">AS</span> region_total
+<span class="k">FROM</span> sales;   <span class="c">-- each row keeps its identity, plus rank & total</span></code></pre>
+
+<h3>CTEs</h3>
+<p>A Common Table Expression (<code>WITH ... AS</code>) names a subquery so complex queries read top-to-bottom instead of nesting. CTEs can also be recursive (for trees/graphs).</p>
+<pre><code><span class="k">WITH</span> top_customers <span class="k">AS</span> (
   <span class="k">SELECT</span> customer_id, <span class="f">SUM</span>(amount) <span class="k">AS</span> spend
-  <span class="k">FROM</span> purchases <span class="k">GROUP BY</span> customer_id
+  <span class="k">FROM</span> purchases
+  <span class="k">GROUP BY</span> customer_id
 )
-<span class="k">SELECT</span> * <span class="k">FROM</span> top_customers <span class="k">WHERE</span> spend > <span class="n">1000</span>;
+<span class="k">SELECT</span> * <span class="k">FROM</span> top_customers <span class="k">WHERE</span> spend > <span class="n">1000</span>;</code></pre>
 
-<span class="c">-- Window function: rank without collapsing rows</span>
-<span class="k">SELECT</span> name, amount,
-  <span class="f">RANK</span>() <span class="k">OVER</span> (<span class="k">PARTITION BY</span> region <span class="k">ORDER BY</span> amount <span class="k">DESC</span>) <span class="k">AS</span> rnk
-<span class="k">FROM</span> sales;</code></pre>
-<p><strong>Indexes</strong> make lookups fast by trading write speed and disk for read speed — add them on columns you filter or join on.</p>
+<h3>Indexes</h3>
+<p>An index is a lookup structure (usually a B-tree) that makes reads on a column dramatically faster — at the cost of extra disk and slightly slower writes. Add them on columns you frequently filter, join, or sort on.</p>
+<pre><code><span class="k">CREATE INDEX</span> idx_purchases_customer <span class="k">ON</span> purchases(customer_id);
+<span class="c">-- use EXPLAIN to confirm a query actually uses your index</span>
+<span class="k">EXPLAIN</span> <span class="k">SELECT</span> * <span class="k">FROM</span> purchases <span class="k">WHERE</span> customer_id = <span class="n">42</span>;</code></pre>
 
-<h3>Which database when</h3>
-<table>
-<tr><th>Type</th><th>Pick</th><th>Use for</th></tr>
-<tr><td>Relational</td><td><strong>PostgreSQL</strong></td><td>Production default; rich features, JSON columns, vector extension (pgvector)</td></tr>
-<tr><td>Relational (embedded)</td><td><strong>SQLite</strong></td><td>Local dev, prototypes, single-file storage — zero setup</td></tr>
-<tr><td>Document (NoSQL)</td><td><strong>MongoDB</strong></td><td>Flexible/nested schemas, rapid iteration</td></tr>
-<tr><td>Cache / in-memory</td><td><strong>Redis</strong></td><td>Session state, rate limiting, caching LLM responses, queues</td></tr>
-</table>
-<pre><code><span class="c"># SQLite ships with Python — great for learning</span>
-<span class="k">import</span> sqlite3
-<span class="n">conn</span> = sqlite3.<span class="f">connect</span>(<span class="s">"app.db"</span>)
-<span class="n">conn</span>.<span class="f">execute</span>(<span class="s">"CREATE TABLE IF NOT EXISTS notes(id INTEGER PRIMARY KEY, body TEXT)"</span>)
-<span class="n">conn</span>.<span class="f">execute</span>(<span class="s">"INSERT INTO notes(body) VALUES (?)"</span>, (<span class="s">"hello"</span>,))  <span class="c"># ? prevents SQL injection</span>
-<span class="n">conn</span>.<span class="f">commit</span>()</code></pre>
+<h3>PostgreSQL</h3>
+<p>The production default. A powerful open-source relational database with JSON columns, full-text search, strong concurrency, and the <strong>pgvector</strong> extension for storing embeddings — meaning you can even do RAG (Phase 10) inside Postgres.</p>
+<pre><code><span class="c"># pip install psycopg[binary]</span>
+<span class="k">import</span> psycopg
+<span class="k">with</span> psycopg.<span class="f">connect</span>(<span class="s">"postgresql://user:pass@localhost/mydb"</span>) <span class="k">as</span> <span class="n">conn</span>:
+    <span class="n">rows</span> = <span class="n">conn</span>.<span class="f">execute</span>(<span class="s">"SELECT id, body FROM notes WHERE id = %s"</span>, (<span class="n">1</span>,)).<span class="f">fetchall</span>()</code></pre>
+
+<h3>SQLite</h3>
+<p>An embedded, single-file relational database that ships with Python — zero setup, perfect for local dev, prototypes, and small apps. Same SQL you'll use in Postgres. This one runs in the playground:</p>
+<pre class="run"><code><span class="k">import</span> sqlite3
+<span class="n">conn</span> = sqlite3.<span class="f">connect</span>(<span class="s">":memory:"</span>)   <span class="c"># in-memory DB for the demo</span>
+<span class="n">conn</span>.<span class="f">execute</span>(<span class="s">"CREATE TABLE notes(id INTEGER PRIMARY KEY, body TEXT)"</span>)
+<span class="n">conn</span>.<span class="f">executemany</span>(<span class="s">"INSERT INTO notes(body) VALUES (?)"</span>,
+                 [(<span class="s">"hello"</span>,), (<span class="s">"world"</span>,)])   <span class="c"># ? placeholders stop SQL injection</span>
+<span class="n">conn</span>.<span class="f">commit</span>()
+<span class="k">for</span> <span class="n">row</span> <span class="k">in</span> <span class="n">conn</span>.<span class="f">execute</span>(<span class="s">"SELECT id, body FROM notes ORDER BY id"</span>):
+    <span class="k">print</span>(<span class="n">row</span>)   <span class="c"># (1, 'hello')  (2, 'world')</span></code></pre>
+
+<h3>MongoDB (NoSQL)</h3>
+<p>A document database that stores JSON-like documents instead of rows. There's no fixed schema, so it's handy when your data is nested or evolving fast. You query with a document-shaped filter rather than SQL.</p>
+<pre><code><span class="c"># pip install pymongo</span>
+<span class="k">from</span> pymongo <span class="k">import</span> MongoClient
+<span class="n">db</span> = <span class="f">MongoClient</span>().<span class="n">mydb</span>
+<span class="n">db</span>.<span class="n">users</span>.<span class="f">insert_one</span>({<span class="s">"name"</span>: <span class="s">"Ada"</span>, <span class="s">"roles"</span>: [<span class="s">"admin"</span>]})   <span class="c"># nested, schemaless</span>
+<span class="n">doc</span> = <span class="n">db</span>.<span class="n">users</span>.<span class="f">find_one</span>({<span class="s">"name"</span>: <span class="s">"Ada"</span>})</code></pre>
+
+<h3>Redis (caching)</h3>
+<p>Redis is an in-memory key–value store — extremely fast, ideal for caching, session state, rate limiting, and simple queues. In agent systems it's commonly used to cache LLM responses and hold short-term conversation state with a TTL (time to live).</p>
+<pre><code><span class="c"># pip install redis</span>
+<span class="k">import</span> redis
+<span class="n">r</span> = redis.<span class="f">Redis</span>()
+<span class="n">r</span>.<span class="f">set</span>(<span class="s">"answer:42"</span>, <span class="s">"cached response"</span>, ex=<span class="n">3600</span>)   <span class="c"># expires in 1 hour</span>
+<span class="n">cached</span> = <span class="n">r</span>.<span class="f">get</span>(<span class="s">"answer:42"</span>)   <span class="c"># skip the expensive LLM call on a hit</span></code></pre>
 </section>
 
 <div class="phase-banner">
@@ -1198,28 +1456,54 @@ logging.<span class="f">basicConfig</span>(level=logging.INFO)
   <p>One of the biggest force-multipliers. If you can integrate an API, you can turn it into an agent tool. Most "useful agent" ideas are just "LLM + the right APIs."</p>
 </div>
 <section id="phase4">
-<p>Every service worth automating has an API: <strong>Google Ads, Meta, Slack, Jira, GitHub, Gmail</strong>, and thousands more. The pattern is always the same — authenticate, send a request, parse the JSON, handle errors.</p>
-<h3>Three Python HTTP clients</h3>
-<table>
-<tr><th>Library</th><th>When</th></tr>
-<tr><td><code>requests</code></td><td>Simple, synchronous, the classic choice for scripts</td></tr>
-<tr><td><code>httpx</code></td><td>Modern; sync <em>and</em> async, HTTP/2 — good default for new code</td></tr>
-<tr><td><code>aiohttp</code></td><td>Fully async; many concurrent calls (e.g. fan-out to many APIs)</td></tr>
-</table>
-<pre><code><span class="c"># typical authenticated call</span>
-<span class="k">import</span> httpx
-<span class="n">headers</span> = {<span class="s">"Authorization"</span>: <span class="s">f"Bearer {token}"</span>}
-<span class="n">r</span> = httpx.<span class="f">post</span>(<span class="s">"https://slack.com/api/chat.postMessage"</span>,
-                 headers=<span class="n">headers</span>,
-                 json={<span class="s">"channel"</span>: <span class="s">"#general"</span>, <span class="s">"text"</span>: <span class="s">"deploy done"</span>})
-<span class="n">r</span>.<span class="f">raise_for_status</span>()     <span class="c"># raise on 4xx/5xx</span>
+<p>This is one of the biggest skills. Every service worth automating has an API, and if you can integrate an API you can turn it into an agent tool. The pattern never changes: authenticate, send a request, parse the JSON, handle errors. Learn it once and every service below becomes reachable.</p>
 
-<span class="c"># async fan-out with aiohttp</span>
-<span class="k">import</span> asyncio, aiohttp
+<h3>Example APIs worth knowing</h3>
+<table>
+<tr><th>API</th><th>What you can automate</th><th>Auth</th></tr>
+<tr><td><strong>Google Ads API</strong></td><td>campaigns, budgets, performance reports</td><td>OAuth 2.0 + developer token</td></tr>
+<tr><td><strong>Meta API</strong></td><td>Facebook/Instagram ads, pages, insights</td><td>OAuth 2.0</td></tr>
+<tr><td><strong>Slack API</strong></td><td>post messages, read channels, slash commands</td><td>Bot token (OAuth)</td></tr>
+<tr><td><strong>Jira API</strong></td><td>create/update issues, sprints, JQL search</td><td>API token / OAuth</td></tr>
+<tr><td><strong>GitHub API</strong></td><td>PRs, issues, repos, Actions</td><td>PAT / OAuth</td></tr>
+<tr><td><strong>Gmail API</strong></td><td>read, send, label, search email</td><td>OAuth 2.0</td></tr>
+</table>
+<p>They differ only in endpoints and scopes. Read the docs for the resource you need, find the auth method, and the request shape follows the same recipe.</p>
+
+<h3>requests</h3>
+<p>The classic, synchronous HTTP client — simplest to learn and perfect for scripts and one-off integrations. Blocks until each call returns.</p>
+<pre><code><span class="k">import</span> requests
+<span class="n">r</span> = requests.<span class="f">get</span>(<span class="s">"https://api.github.com/repos/python/cpython"</span>,
+                 headers={<span class="s">"Authorization"</span>: <span class="s">f"Bearer {token}"</span>})
+<span class="n">r</span>.<span class="f">raise_for_status</span>()          <span class="c"># raise on 4xx/5xx</span>
+<span class="k">print</span>(<span class="n">r</span>.<span class="f">json</span>()[<span class="s">"stargazers_count"</span>])</code></pre>
+
+<h3>httpx</h3>
+<p>The modern successor to <code>requests</code>: same friendly API but supports <strong>async</strong> and HTTP/2. A good default for new code, especially if you'll eventually make concurrent calls.</p>
+<pre><code><span class="k">import</span> httpx
+<span class="c"># sync — drop-in familiar</span>
+<span class="n">r</span> = httpx.<span class="f">post</span>(<span class="s">"https://slack.com/api/chat.postMessage"</span>,
+                 headers={<span class="s">"Authorization"</span>: <span class="s">f"Bearer {token}"</span>},
+                 json={<span class="s">"channel"</span>: <span class="s">"#general"</span>, <span class="s">"text"</span>: <span class="s">"deploy done"</span>})
+<span class="n">r</span>.<span class="f">raise_for_status</span>()
+
+<span class="c"># async — for concurrency</span>
+<span class="k">async with</span> httpx.<span class="f">AsyncClient</span>() <span class="k">as</span> <span class="n">client</span>:
+    <span class="n">resp</span> = <span class="k">await</span> <span class="n">client</span>.<span class="f">get</span>(<span class="n">url</span>)</code></pre>
+
+<h3>aiohttp</h3>
+<p>A fully async HTTP client/server. Reach for it when you need to fan out to <strong>many</strong> APIs at once — dozens of concurrent requests without blocking, which matters when an agent gathers data from several sources in parallel.</p>
+<pre><code><span class="k">import</span> asyncio, aiohttp
+
 <span class="k">async def</span> <span class="f">fetch</span>(<span class="n">session</span>, <span class="n">url</span>):
     <span class="k">async with</span> <span class="n">session</span>.<span class="f">get</span>(<span class="n">url</span>) <span class="k">as</span> <span class="n">resp</span>:
-        <span class="k">return</span> <span class="k">await</span> <span class="n">resp</span>.<span class="f">json</span>()</code></pre>
-<div class="callout tip"><strong>Practical habits:</strong> read the API's rate limits and pagination; retry with backoff on 429/5xx; keep keys in env vars; and wrap each integration behind a small function so it can later become an agent tool (Phase 8).</div>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">resp</span>.<span class="f">json</span>()
+
+<span class="k">async def</span> <span class="f">main</span>(<span class="n">urls</span>):
+    <span class="k">async with</span> aiohttp.<span class="f">ClientSession</span>() <span class="k">as</span> <span class="n">s</span>:
+        <span class="k">return</span> <span class="k">await</span> asyncio.<span class="f">gather</span>(*[<span class="f">fetch</span>(<span class="n">s</span>, <span class="n">u</span>) <span class="k">for</span> <span class="n">u</span> <span class="k">in</span> <span class="n">urls</span>])   <span class="c"># all at once</span></code></pre>
+
+<div class="callout tip"><strong>Production habits for any API:</strong> read the rate limits and paginate large result sets; retry with exponential backoff on <code>429</code>/<code>5xx</code>; keep keys in environment variables; set timeouts; and wrap each integration behind a small, well-named function so it can later become an agent tool (Phase 8).</div>
 </section>
 
 <div class="phase-banner">
@@ -1228,25 +1512,58 @@ logging.<span class="f">basicConfig</span>(level=logging.INFO)
   <p>You don't need to train models or read papers. You need a working mental model of how LLMs behave so you can build reliably on top of them.</p>
 </div>
 <section id="phase5">
-<table>
-<tr><th>Concept</th><th>What to understand</th></tr>
-<tr><td><strong>LLM</strong></td><td>A model that predicts the next token; through scale it appears to reason, summarize, and write code</td></tr>
-<tr><td><strong>Tokens</strong></td><td>Sub-word chunks the model reads/writes; you pay per token and limits are counted in tokens (~4 chars ≈ 1 token in English)</td></tr>
-<tr><td><strong>Context window</strong></td><td>Max tokens the model can "see" at once (prompt + response). Exceed it and older content is dropped</td></tr>
-<tr><td><strong>Embeddings</strong></td><td>Text → a vector of numbers capturing meaning; similar text → nearby vectors. The basis of search &amp; RAG</td></tr>
-<tr><td><strong>Temperature</strong></td><td>Randomness knob: 0 = deterministic/focused, higher = more creative/varied</td></tr>
-<tr><td><strong>Hallucination</strong></td><td>Confident but wrong output; mitigated by grounding the model in real data (RAG) and tools</td></tr>
-<tr><td><strong>Function / tool calling</strong></td><td>The model returns a structured request to call your code; you run it and feed the result back. This is what makes an "agent"</td></tr>
-<tr><td><strong>RAG</strong></td><td>Retrieve relevant documents, then let the LLM answer from them (Phase 10)</td></tr>
-<tr><td><strong>Fine-tuning</strong></td><td>Further-training a model on your data. Conceptually useful, rarely your first move — prompting + RAG usually suffice</td></tr>
-</table>
-<pre><code><span class="c"># the shape of a modern chat + tool-use call (OpenAI-style)</span>
+<p>Don't go too deep into research or math. You need a working mental model of how LLMs behave so you can build on them reliably. Here's each core concept.</p>
+
+<h3>What is an LLM?</h3>
+<p>A Large Language Model is a neural network trained to <strong>predict the next token</strong> given the preceding text. That single objective, at massive scale, produces a model that can summarize, translate, write code, and appear to reason. It has no memory between calls and no live access to the world — everything it "knows" is either baked in from training or supplied in the prompt.</p>
+
+<h3>Tokens</h3>
+<p>Models don't read characters or words — they read <strong>tokens</strong>, sub-word chunks. Roughly 4 characters ≈ 1 token in English. You're billed per token (input + output), and every model limit is measured in tokens, so token-awareness is cost-awareness.</p>
+
+<h3>Context window</h3>
+<p>The context window is the maximum number of tokens the model can consider at once — prompt <em>plus</em> its reply. Everything the model uses to answer must fit inside it. Exceed it and you must truncate, summarize, or retrieve only the relevant pieces (that's what RAG is for).</p>
+
+<h3>Embeddings</h3>
+<p>An embedding turns text into a vector of numbers that captures meaning: similar meanings land near each other in vector space. Comparing vectors (cosine similarity) is how you do semantic search — the foundation of memory (Phase 9) and RAG (Phase 10).</p>
+<pre><code><span class="c"># "dog" and "puppy" produce nearby vectors; "dog" and "invoice" are far apart</span>
+<span class="n">emb</span> = <span class="n">client</span>.embeddings.<span class="f">create</span>(model=<span class="s">"text-embedding-3-small"</span>, input=<span class="s">"a happy dog"</span>)
+<span class="n">vector</span> = <span class="n">emb</span>.<span class="n">data</span>[<span class="n">0</span>].<span class="n">embedding</span>   <span class="c"># e.g. a list of 1536 floats</span></code></pre>
+
+<h3>Prompting</h3>
+<p>The prompt is your entire interface to the model — the instructions, context, and question you send. Small wording changes meaningfully change output, which is why prompt engineering (Phase 6) is its own skill.</p>
+
+<h3>Temperature</h3>
+<p>Temperature controls randomness. <strong>0</strong> makes output focused and near-deterministic (best for extraction, classification, tool use); higher values (0.7–1.0) add variety and creativity (brainstorming, copywriting). For agents that call tools, keep it low.</p>
+
+<h3>Hallucinations</h3>
+<p>A hallucination is confident, plausible-sounding output that is simply wrong. LLMs generate likely text, not verified facts. You reduce hallucination by grounding the model in real data (RAG), giving it tools to look things up, asking for citations, and keeping tasks narrow.</p>
+
+<h3>RAG</h3>
+<p>Retrieval-Augmented Generation: fetch relevant documents first, then let the LLM answer using them. It keeps answers current and grounded without retraining. Covered in depth in Phase 10.</p>
+
+<h3>Fine-tuning (conceptually)</h3>
+<p>Fine-tuning further-trains a base model on your own examples to bake in a style or task. It's powerful but rarely your first move — it needs data, costs money, and goes stale. Prompting plus RAG solves most problems; reach for fine-tuning only when you need a consistent format or behavior that prompting can't reliably produce.</p>
+
+<h3>Function calling / tool use</h3>
+<p>This is what turns a chatbot into an <strong>agent</strong>. You describe functions (tools) to the model; when useful, it returns a structured request to call one; you execute it and feed the result back so it can continue. The loop of think → call tool → observe → continue is the heart of every agent framework.</p>
+<pre><code><span class="c"># the model replies with a tool call instead of prose:</span>
+{ <span class="s">"tool"</span>: <span class="s">"get_weather"</span>, <span class="s">"arguments"</span>: {<span class="s">"city"</span>: <span class="s">"Austin"</span>} }
+<span class="c"># you run get_weather("Austin"), return the result, model writes the final answer</span></code></pre>
+
+<h3>Model context</h3>
+<p>"Context" is everything you pack into a request: system instructions, conversation history, retrieved documents, and tool results. Managing it well — deciding what to include, summarize, or drop so the important parts fit the window — is a core agent-engineering skill. (The Model Context Protocol, MCP, is an emerging standard for feeding tools and data to models in a uniform way.)</p>
+
+<h3>Putting it together</h3>
+<pre><code><span class="c"># the shape of a modern chat call (OpenAI-style)</span>
 <span class="k">from</span> openai <span class="k">import</span> OpenAI
 <span class="n">client</span> = <span class="f">OpenAI</span>()
 <span class="n">resp</span> = <span class="n">client</span>.chat.completions.<span class="f">create</span>(
     model=<span class="s">"gpt-4o"</span>,
-    temperature=<span class="n">0</span>,
-    messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"Summarize this ticket..."</span>}],
+    temperature=<span class="n">0</span>,                     <span class="c"># focused, repeatable</span>
+    messages=[
+        {<span class="s">"role"</span>: <span class="s">"system"</span>, <span class="s">"content"</span>: <span class="s">"You are a concise assistant."</span>},
+        {<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"Summarize this ticket..."</span>},
+    ],
 )
 <span class="k">print</span>(<span class="n">resp</span>.choices[<span class="n">0</span>].message.content)</code></pre>
 </section>
@@ -1257,22 +1574,48 @@ logging.<span class="f">basicConfig</span>(level=logging.INFO)
   <p>Treat prompts like programs: precise inputs, defined output format, examples, and tests. This is the highest-leverage skill for reliable agents.</p>
 </div>
 <section id="phase6">
-<h3>Techniques</h3>
-<p><strong>Role prompting</strong> sets behavior ("You are a senior SQL reviewer..."). <strong>Few-shot</strong> prompting shows 2–5 input/output examples so the model matches the pattern. <strong>Chain of thought</strong> is the idea that reasoning step-by-step improves hard tasks — understand the concept, though with modern models you generally don't need to ask them to expose their reasoning. <strong>Structured / JSON output</strong> forces machine-parseable results. <strong>Tool-calling</strong> and <strong>planning</strong> prompts direct the model to pick tools or lay out steps.</p>
-<pre><code><span class="c"># role + few-shot + structured output, all in one</span>
-<span class="n">SYSTEM</span> = <span class="s">"""You are a support classifier.
-Return ONLY JSON: {"category": str, "urgent": bool}."""</span>
+<p>Learn to write prompts like programs: precise inputs, a defined output format, examples, and tests. This is the highest-leverage skill for building reliable agents. Each technique below is a tool you'll combine.</p>
 
-<span class="n">EXAMPLES</span> = <span class="s">"""
+<h3>Role prompting</h3>
+<p>Assign the model a role and it adopts the relevant knowledge, tone, and priorities. Put this in the <em>system</em> message — it steers everything that follows.</p>
+<pre><code><span class="n">SYSTEM</span> = <span class="s">"""You are a senior SQL reviewer.
+Flag correctness bugs and injection risks. Be terse and specific."""</span></code></pre>
+
+<h3>Few-shot prompting</h3>
+<p>Show 2–5 input→output examples so the model copies the pattern. Few-shot is often the fastest way to lock in a format or edge-case handling without long instructions.</p>
+<pre><code><span class="n">EXAMPLES</span> = <span class="s">"""
 Input: "My payment failed twice" -> {"category": "billing", "urgent": true}
 Input: "How do I change my avatar?" -> {"category": "account", "urgent": false}
-"""</span></code></pre>
-<div class="callout tip"><strong>Get structured output reliably:</strong> ask for JSON <em>and</em> validate it. Pair prompts with a <code>pydantic</code> model (or the provider's "structured output" / "JSON mode") so malformed responses fail loudly instead of corrupting downstream steps.</div>
+Input: "The app crashes on launch" -> {"category": "bug", "urgent": true}
+"""</span>   <span class="c"># then ask the model to classify a new input in the same shape</span></code></pre>
+
+<h3>Chain of thought</h3>
+<p>The idea that letting a model reason step-by-step improves hard, multi-step tasks (math, logic, planning). Understand the concept — but with modern models you generally <em>don't</em> need to explicitly ask them to reveal their reasoning; many reason internally. Prefer asking for the answer (and a brief justification) over dumping raw step-by-step traces into user-facing output.</p>
+
+<h3>Structured output</h3>
+<p>Force output into a fixed shape your code can consume, instead of free prose. This is what makes an LLM safe to wire into a pipeline — the next step gets predictable fields.</p>
+
+<h3>JSON output</h3>
+<p>The most common structured format. Ask for JSON <em>and validate it</em> — pair the prompt with a <code>pydantic</code> model (or the provider's "JSON mode" / structured-output feature) so malformed responses fail loudly instead of corrupting downstream steps.</p>
 <pre><code><span class="k">from</span> pydantic <span class="k">import</span> BaseModel
 <span class="k">class</span> <span class="f">Ticket</span>(<span class="f">BaseModel</span>):
     category: <span class="f">str</span>
     urgent: <span class="f">bool</span>
-<span class="n">Ticket</span>.<span class="f">model_validate_json</span>(<span class="n">llm_output</span>)   <span class="c"># raises if the shape is wrong</span></code></pre>
+
+<span class="n">SYSTEM</span> = <span class="s">'Return ONLY JSON: {"category": str, "urgent": bool}.'</span>
+<span class="n">ticket</span> = <span class="n">Ticket</span>.<span class="f">model_validate_json</span>(<span class="n">llm_output</span>)   <span class="c"># raises if the shape is wrong</span></code></pre>
+
+<h3>Tool calling</h3>
+<p>Prompt the model to choose and fill in a tool rather than answer directly. You provide tool descriptions; the model returns a structured call. Clear tool names and argument descriptions <em>are</em> the prompt here — invest in them.</p>
+<pre><code><span class="n">SYSTEM</span> = <span class="s">"""You can call tools. Use `search_docs(query)` for product questions,
+and `create_ticket(summary, priority)` to escalate. Prefer a tool over guessing."""</span></code></pre>
+
+<h3>Planning prompts</h3>
+<p>For complex tasks, ask the model to lay out a plan (a list of steps or sub-tasks) before executing. A manager agent often plans, then delegates each step to a specialist (Phase 11).</p>
+<pre><code><span class="n">SYSTEM</span> = <span class="s">"""First produce a numbered plan of steps.
+Then execute them one at a time, checking the result of each before continuing."""</span></code></pre>
+
+<div class="callout tip"><strong>Prompt like an engineer:</strong> keep prompts in version control (Phase 14), test them against a fixed set of inputs, change one thing at a time, and always validate structured output before trusting it downstream.</div>
 </section>
 
 <div class="phase-banner">
@@ -1290,7 +1633,10 @@ Input: "How do I change my avatar?" -> {"category": "account", "urgent": false}
 <tr><td><strong>CrewAI</strong></td><td>Role-based crews of collaborating agents; quick to prototype teams</td></tr>
 <tr><td><strong>AutoGen</strong></td><td>Conversational multi-agent orchestration (Microsoft)</td></tr>
 </table>
-<p>Whichever you pick, the concepts transfer. Make sure you can explain and build: <strong>agents</strong> (an LLM in a loop with tools), <strong>tools</strong> (functions the agent can call), <strong>memory</strong> (state across turns), <strong>routing</strong> (choosing the next step/agent), <strong>multi-agent systems</strong> (specialists coordinated by a manager), and <strong>human approval steps</strong> (pause for a person before a risky action).</p>
+<p>Pick one framework and learn it deeply — the concepts transfer to the rest. <strong>LangChain</strong> gives the broadest integration ecosystem; <strong>LangGraph</strong> models agents as a graph for stateful, cyclic workflows; the <strong>OpenAI Agents SDK</strong> is a lightweight first-party starting point; <strong>LlamaIndex</strong> is RAG-first; <strong>CrewAI</strong> makes role-based agent teams quick; <strong>AutoGen</strong> focuses on conversational multi-agent orchestration.</p>
+
+<h3>Agents</h3>
+<p>An agent is an LLM running in a loop with access to tools: it reads the goal, decides whether to answer or call a tool, observes the result, and repeats until done. Everything else in this phase supports that loop.</p>
 <pre><code><span class="c"># OpenAI Agents SDK — an agent with one tool</span>
 <span class="k">from</span> agents <span class="k">import</span> Agent, function_tool
 
@@ -1303,6 +1649,25 @@ Input: "How do I change my avatar?" -> {"category": "account", "urgent": false}
     instructions=<span class="s">"Help the user. Use tools when needed."</span>,
     tools=[<span class="n">get_weather</span>],
 )</code></pre>
+
+<h3>Tools</h3>
+<p>Tools are the functions an agent can call to affect the world — search, query a DB, send an email. The framework exposes their names, argument types, and docstrings to the model. Building good tools is important enough to be its own phase (Phase 8).</p>
+
+<h3>Memory</h3>
+<p>Memory is how an agent carries state across turns and sessions: the conversation so far (short-term) and facts or documents recalled later (long-term). Frameworks provide memory abstractions; the underlying stores are covered in Phase 9.</p>
+
+<h3>Routing</h3>
+<p>Routing decides <em>what happens next</em> — which tool to use, which specialist agent to hand off to, or whether the task is finished. In graph frameworks like LangGraph this is an explicit edge/condition; in others the LLM itself routes by choosing a tool or handoff.</p>
+
+<h3>Multi-agent systems</h3>
+<p>Rather than one do-everything agent, a manager coordinates specialists, each with a focused role and its own tools. Keeps prompts small and reliable. Expanded in Phase 11.</p>
+
+<h3>Human approval steps</h3>
+<p>For risky or irreversible actions (sending money, emailing customers, deleting data), the agent should pause and wait for a human to approve before proceeding. Frameworks call this human-in-the-loop; build it in from the start for anything consequential.</p>
+<pre><code><span class="c"># conceptual gate before a destructive action</span>
+<span class="k">if</span> <span class="n">action</span>.<span class="n">is_destructive</span>:
+    <span class="k">if</span> <span class="k">not</span> <span class="f">request_human_approval</span>(<span class="n">action</span>):   <span class="c"># pause &amp; wait</span>
+        <span class="k">return</span> <span class="s">"cancelled by reviewer"</span></code></pre>
 </section>
 
 <div class="phase-banner">
@@ -1311,7 +1676,24 @@ Input: "How do I change my avatar?" -> {"category": "account", "urgent": false}
   <p>An agent is only as useful as the tools it can call. A "tool" is just a well-described function the LLM can invoke — this is where Phase 4 (APIs) pays off.</p>
 </div>
 <section id="phase8">
-<p>Common tools to build: <strong>Google Search, Slack, Google Ads, Meta Ads, database query, calculator, email, browser, GitHub, Jira</strong>. Each wraps an API or capability behind a clear name, typed arguments, and a docstring the model reads to decide when to use it.</p>
+<p>An agent is only as useful as the tools it can call. A tool is a well-described function wrapping an API or capability — this is where Phase 4 (APIs) pays off. The model reads each tool's name, argument types, and docstring to decide when and how to call it, so those descriptions <em>are</em> part of your prompt.</p>
+
+<h3>Common tools and what they wrap</h3>
+<table>
+<tr><th>Tool</th><th>Wraps</th><th>Example use</th></tr>
+<tr><td>Google Search</td><td>a search API</td><td>look up current facts the model doesn't know</td></tr>
+<tr><td>Slack</td><td>Slack API</td><td>post updates, read a channel</td></tr>
+<tr><td>Google Ads / Meta Ads</td><td>ads APIs</td><td>pull performance, adjust budgets</td></tr>
+<tr><td>Database</td><td>SQL/NoSQL driver</td><td>answer questions from your data</td></tr>
+<tr><td>Calculator</td><td>safe eval / math</td><td>exact arithmetic (LLMs are unreliable at math)</td></tr>
+<tr><td>Email</td><td>Gmail/SMTP</td><td>draft and (after approval) send mail</td></tr>
+<tr><td>Browser</td><td>headless browser</td><td>read pages, fill forms, scrape</td></tr>
+<tr><td>GitHub</td><td>GitHub API</td><td>open PRs, read issues, comment</td></tr>
+<tr><td>Jira</td><td>Jira API</td><td>create/update tickets, run JQL</td></tr>
+</table>
+
+<h3>Anatomy of a tool</h3>
+<p>Every tool follows the same shape: a clear name, typed arguments, a docstring that tells the model when to use it, and a concise return value.</p>
 <pre><code><span class="k">from</span> agents <span class="k">import</span> function_tool
 <span class="k">import</span> httpx
 
@@ -1322,7 +1704,21 @@ Input: "How do I change my avatar?" -> {"category": "account", "urgent": false}
                      headers={<span class="s">"Authorization"</span>: <span class="s">f"Bearer {TOKEN}"</span>},
                      json={<span class="s">"channel"</span>: <span class="n">channel</span>, <span class="s">"text"</span>: <span class="n">text</span>})
     <span class="k">return</span> <span class="s">"sent"</span> <span class="k">if</span> <span class="n">r</span>.<span class="f">json</span>().<span class="f">get</span>(<span class="s">"ok"</span>) <span class="k">else</span> <span class="s">"failed"</span></code></pre>
-<div class="callout tip"><strong>Tool design rules:</strong> one clear job per tool; descriptive name and docstring (the model chooses tools from these); typed, validated arguments; and return concise strings/JSON — not giant blobs that flood the context window. Make destructive tools (send email, delete row) require a human-approval step.</div>
+<p>A pure-Python tool needs no API at all — here's a calculator tool you can run:</p>
+<pre class="run"><code><span class="k">import</span> ast, operator <span class="k">as</span> op
+<span class="n">OPS</span> = {ast.<span class="n">Add</span>: op.<span class="n">add</span>, ast.<span class="n">Sub</span>: op.<span class="n">sub</span>,
+       ast.<span class="n">Mult</span>: op.<span class="n">mul</span>, ast.<span class="n">Div</span>: op.<span class="n">truediv</span>, ast.<span class="n">Pow</span>: op.<span class="n">pow</span>}
+
+<span class="k">def</span> <span class="f">calculator</span>(<span class="n">expr</span>: <span class="f">str</span>) -> <span class="f">float</span>:
+    <span class="s">"""Safely evaluate a math expression like '2 * (3 + 4)'."""</span>
+    <span class="k">def</span> <span class="f">ev</span>(<span class="n">n</span>):
+        <span class="k">if</span> <span class="f">isinstance</span>(<span class="n">n</span>, ast.<span class="n">Constant</span>): <span class="k">return</span> <span class="n">n</span>.<span class="n">value</span>
+        <span class="k">if</span> <span class="f">isinstance</span>(<span class="n">n</span>, ast.<span class="n">BinOp</span>):   <span class="k">return</span> <span class="n">OPS</span>[<span class="f">type</span>(<span class="n">n</span>.<span class="n">op</span>)](<span class="f">ev</span>(<span class="n">n</span>.<span class="n">left</span>), <span class="f">ev</span>(<span class="n">n</span>.<span class="n">right</span>))
+        <span class="k">raise</span> <span class="f">ValueError</span>(<span class="s">"unsupported"</span>)
+    <span class="k">return</span> <span class="f">ev</span>(ast.<span class="f">parse</span>(<span class="n">expr</span>, mode=<span class="s">"eval"</span>).<span class="n">body</span>)
+
+<span class="k">print</span>(<span class="f">calculator</span>(<span class="s">"2 * (3 + 4)"</span>))   <span class="c"># 14</span></code></pre>
+<div class="callout tip"><strong>Tool design rules:</strong> one clear job per tool; a descriptive name and docstring (the model chooses tools from these); typed, validated arguments; and return concise strings/JSON — not giant blobs that flood the context window. Gate destructive tools (send email, delete row, spend money) behind a human-approval step.</div>
 </section>
 
 <div class="phase-banner">
@@ -1331,19 +1727,39 @@ Input: "How do I change my avatar?" -> {"category": "account", "urgent": false}
   <p>LLMs are stateless between calls. Memory is how an agent remembers the conversation, the user, and relevant knowledge across turns and sessions.</p>
 </div>
 <section id="phase9">
-<table>
-<tr><th>Kind</th><th>Holds</th><th>Typical store</th></tr>
-<tr><td><strong>Short-term</strong></td><td>Current conversation history</td><td>A list of messages in the context window; Redis for sessions</td></tr>
-<tr><td><strong>Long-term</strong></td><td>User preferences, facts learned over time</td><td>SQL / document DB, keyed by user</td></tr>
-<tr><td><strong>Knowledge</strong></td><td>Documents the agent can search</td><td>Vector database (embeddings)</td></tr>
-</table>
-<p>For knowledge and semantic recall you store <strong>embeddings</strong> in a <strong>vector database</strong> and retrieve by similarity. Common choices: <strong>Chroma</strong> (easy, local/open-source), <strong>FAISS</strong> (fast in-memory library from Meta), and <strong>Pinecone</strong> (managed cloud service).</p>
-<pre><code><span class="c"># short-term memory is often just a growing message list</span>
-<span class="n">history</span> = [
+<p>LLMs are stateless between calls — memory is how an agent remembers the conversation, the user, and relevant knowledge across turns and sessions. There are three kinds.</p>
+
+<h3>Short-term memory (conversation history)</h3>
+<p>The running transcript of the current conversation. Usually just a growing list of messages you resend each turn. Because it consumes context-window tokens, you eventually trim or summarize old turns.</p>
+<pre><code><span class="n">history</span> = [
     {<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"My name is Ada"</span>},
     {<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: <span class="s">"Nice to meet you, Ada"</span>},
 ]
-<span class="c"># trim or summarize old turns before you exceed the context window</span></code></pre>
+<span class="c"># append each turn; summarize the oldest turns before you hit the token limit.</span>
+<span class="c"># Redis is a common store for per-session history with a TTL.</span></code></pre>
+
+<h3>Long-term memory (user preferences)</h3>
+<p>Durable facts that should survive across sessions — a user's name, preferences, past decisions. Store these in a regular database (SQL or document), keyed by user, and load the relevant bits into the prompt when needed.</p>
+<pre><code><span class="c"># persist a preference, recall it in a later session</span>
+<span class="n">db</span>.<span class="f">save</span>(<span class="s">"user:42:prefs"</span>, {<span class="s">"tone"</span>: <span class="s">"concise"</span>, <span class="s">"timezone"</span>: <span class="s">"CT"</span>})
+<span class="n">prefs</span> = <span class="n">db</span>.<span class="f">load</span>(<span class="s">"user:42:prefs"</span>)   <span class="c"># inject into the system prompt next time</span></code></pre>
+
+<h3>Knowledge (documents)</h3>
+<p>The body of documents an agent can draw on to answer questions — manuals, wikis, PDFs. Too large for the context window, so you store it as <strong>embeddings</strong> in a <strong>vector database</strong> and retrieve only the relevant pieces on demand (that's RAG, Phase 10).</p>
+
+<h3>Vector databases</h3>
+<p>A vector DB stores embeddings and finds the nearest ones to a query vector — semantic search at scale.</p>
+<table>
+<tr><th>Option</th><th>Nature</th><th>Best for</th></tr>
+<tr><td><strong>Chroma</strong></td><td>open-source, local/embedded</td><td>learning and small/medium apps — easiest to start</td></tr>
+<tr><td><strong>FAISS</strong></td><td>in-memory library (Meta)</td><td>fast similarity search you embed in your own process</td></tr>
+<tr><td><strong>Pinecone</strong></td><td>managed cloud service</td><td>production scale without running infrastructure yourself</td></tr>
+</table>
+<pre><code><span class="c"># store &amp; recall knowledge with Chroma (it embeds text for you)</span>
+<span class="k">import</span> chromadb
+<span class="n">col</span> = chromadb.<span class="f">Client</span>().<span class="f">create_collection</span>(<span class="s">"kb"</span>)
+<span class="n">col</span>.<span class="f">add</span>(documents=[<span class="s">"Refunds take 5-7 days."</span>], ids=[<span class="s">"d1"</span>])
+<span class="n">hit</span> = <span class="n">col</span>.<span class="f">query</span>(query_texts=[<span class="s">"refund time?"</span>], n_results=<span class="n">1</span>)</code></pre>
 </section>
 
 <div class="phase-banner">
@@ -1361,8 +1777,22 @@ Retrieve the most relevant document chunks
 Put those chunks into the prompt
         │
 LLM answers using ONLY those documents</div>
-<h3>The pipeline, step by step</h3>
-<p><strong>Chunking</strong> splits documents into passages small enough to embed and retrieve (e.g. 500–1000 tokens with slight overlap). <strong>Embeddings</strong> turn each chunk into a vector. <strong>Vector search</strong> finds chunks nearest to the question's vector. <strong>Retrieval</strong> injects those chunks into the prompt. <strong>Re-ranking</strong> (optional at first) reorders candidates with a stronger model for higher precision.</p>
+<h3>Embeddings</h3>
+<p>The starting point: convert both your documents and the incoming question into vectors with an embedding model, so meaning becomes comparable as distance in vector space. Use the same model for both sides.</p>
+
+<h3>Chunking</h3>
+<p>Documents are too big to embed whole, so split them into passages — typically 500–1000 tokens with a little overlap so ideas aren't cut mid-sentence. Chunk size is a real tuning knob: too big dilutes relevance, too small loses context.</p>
+
+<h3>Vector search</h3>
+<p>Embed the user's question and find the chunks whose vectors are nearest (cosine similarity). This returns the passages most semantically related to the question, not just keyword matches.</p>
+
+<h3>Retrieval</h3>
+<p>Take the top matching chunks and inject them into the prompt as context, then ask the LLM to answer using <em>only</em> those chunks. This grounds the answer and lets you cite sources.</p>
+
+<h3>Re-ranking (optional at first)</h3>
+<p>Vector search is fast but approximate. A re-ranker runs a stronger model over the top ~20 candidates to reorder them by true relevance before you pass the best few to the LLM. Skip it while learning; add it when precision matters.</p>
+
+<h3>Minimal RAG in code</h3>
 <pre><code><span class="c"># minimal RAG with Chroma</span>
 <span class="k">import</span> chromadb
 <span class="n">client</span> = chromadb.<span class="f">Client</span>()
@@ -1389,6 +1819,17 @@ LLM answers using ONLY those documents</div>
 Research   Coding   Testing  Reporting  Deployment
  Agent      Agent    Agent     Agent       Agent</div>
 <p>Each agent has a specialized role and only the tools it needs. The manager (or a router) decides who acts next, passes results between them, and decides when the task is done. This mirrors how a human team divides labor — and keeps each prompt focused and reliable.</p>
+<h3>The roles in a typical crew</h3>
+<table>
+<tr><th>Agent</th><th>Responsibility</th><th>Typical tools</th></tr>
+<tr><td><strong>Manager</strong></td><td>plan the work, delegate, decide when done</td><td>routing / handoffs</td></tr>
+<tr><td><strong>Research</strong></td><td>gather facts and context</td><td>search, browser, RAG</td></tr>
+<tr><td><strong>Coding</strong></td><td>write or modify code</td><td>file/editor, GitHub</td></tr>
+<tr><td><strong>Testing</strong></td><td>verify the work, catch regressions</td><td>test runner, sandbox</td></tr>
+<tr><td><strong>Reporting</strong></td><td>summarize results for humans</td><td>doc/Slack/email</td></tr>
+<tr><td><strong>Deployment</strong></td><td>ship it</td><td>CI/CD, cloud APIs</td></tr>
+</table>
+<p>Two common coordination shapes: a <strong>manager/hierarchy</strong> (one agent delegates to specialists and integrates their output) and a <strong>pipeline</strong> (each agent hands its result to the next, like an assembly line). Keep each agent's prompt narrow — that's what makes the whole system reliable.</p>
 <pre><code><span class="c"># handoff pattern (OpenAI Agents SDK)</span>
 <span class="k">from</span> agents <span class="k">import</span> Agent
 
@@ -1409,16 +1850,21 @@ Research   Coding   Testing  Reporting  Deployment
   <p>The most important phase. Concepts stick only when you ship something end to end. Build small, finish it, then add complexity.</p>
 </div>
 <section id="phase12">
-<h3>Beginner project ideas</h3>
-<p>Each of these exercises the whole stack — APIs, prompts, memory, and often RAG:</p>
-<table>
-<tr><th>Project</th><th>Skills it forces</th></tr>
-<tr><td><strong>Email assistant</strong></td><td>Gmail API, tool-calling, drafting prompts, human approval before send</td></tr>
-<tr><td><strong>PDF chatbot</strong></td><td>Chunking, embeddings, vector search — a complete RAG loop</td></tr>
-<tr><td><strong>Resume reviewer</strong></td><td>Structured output, role prompting, scoring rubric</td></tr>
-<tr><td><strong>SQL assistant</strong></td><td>Natural language → SQL, database tool, guardrails against destructive queries</td></tr>
-</table>
-<div class="callout tip"><strong>Portfolio tip:</strong> finish two or three projects, put them on GitHub with a clear README and a short demo, and deploy at least one (Phase 13). A deployed, working agent beats a dozen half-built notebooks.</div>
+<p>The most important phase. Concepts stick only when you ship something end to end. Build small, finish it, then add complexity. Each idea below exercises the whole stack — APIs, prompts, memory, and often RAG.</p>
+
+<h3>Email assistant</h3>
+<p>Reads your inbox, drafts replies, and (after you approve) sends them. Forces the Gmail API, tool-calling, drafting prompts, and — crucially — a human-approval step before anything is sent.</p>
+
+<h3>PDF chatbot</h3>
+<p>Answer questions about a PDF you upload. This is a complete RAG loop end to end: extract text, chunk it, embed it, store vectors, retrieve on each question, and answer with citations. The best first project for learning RAG.</p>
+
+<h3>Resume reviewer</h3>
+<p>Score a resume against a job description and return structured feedback. Forces role prompting (act as a recruiter), a scoring rubric, and structured/JSON output you can render as a report.</p>
+
+<h3>SQL assistant</h3>
+<p>Turn plain-English questions into SQL, run them, and explain the results. Forces a database tool, natural-language-to-SQL prompting, and guardrails — read-only access and validation so the agent can't run destructive queries.</p>
+
+<div class="callout tip"><strong>Portfolio tip:</strong> finish two or three projects, put them on GitHub with a clear README and a short demo (a GIF or Loom), and deploy at least one (Phase 13). A deployed, working agent beats a dozen half-built notebooks.</div>
 </section>
 
 <div class="phase-banner">
@@ -1427,23 +1873,57 @@ Research   Coding   Testing  Reporting  Deployment
   <p>An agent on your laptop isn't a product. Learn to package it, serve it, and ship it reliably.</p>
 </div>
 <section id="phase13">
-<p>Build up in this order: <strong>Linux basics</strong> (shell, files, permissions) → <strong>Docker</strong> (package the app + deps into a reproducible image) → <strong>FastAPI</strong> (expose your agent as an HTTP API) → <strong>CI/CD with GitHub Actions</strong> (auto-test and deploy on push) → a <strong>cloud platform</strong> (AWS, Azure, or GCP) for hosting.</p>
-<pre><code><span class="c"># FastAPI: wrap an agent in an endpoint</span>
-<span class="k">from</span> fastapi <span class="k">import</span> FastAPI
-<span class="n">app</span> = <span class="f">FastAPI</span>()
+<p>An agent on your laptop isn't a product. Learn to package it, serve it, and ship it reliably. Build up roughly in the order below.</p>
 
-<span class="n">@app.post</span>(<span class="s">"/ask"</span>)
-<span class="k">def</span> <span class="f">ask</span>(<span class="n">question</span>: <span class="f">str</span>):
-    <span class="n">answer</span> = <span class="f">run_agent</span>(<span class="n">question</span>)
-    <span class="k">return</span> {<span class="s">"answer"</span>: <span class="n">answer</span>}
-<span class="c"># run:  uvicorn app:app --reload</span></code></pre>
+<h3>Linux basics</h3>
+<p>Servers run Linux, so get comfortable at the shell: navigating files, permissions (<code>chmod</code>/<code>chown</code>), environment variables, processes, and reading logs. You don't need to be a sysadmin — just fluent enough to deploy and debug.</p>
+<pre><code>ls -la          <span class="c"># list files incl. hidden</span>
+cd /app &amp;&amp; cat app.log     <span class="c"># move around, read a log</span>
+export API_KEY=...          <span class="c"># set an env var</span>
+ps aux | grep uvicorn       <span class="c"># find a running process</span></code></pre>
+
+<h3>Docker</h3>
+<p>Docker packages your app <em>and</em> its dependencies into a reproducible image that runs identically on any machine — no "works on my laptop" surprises. A <code>Dockerfile</code> describes how to build it.</p>
 <pre><code><span class="c"># Dockerfile: reproducible everywhere</span>
 <span class="k">FROM</span> python:3.12-slim
 <span class="k">WORKDIR</span> /app
 <span class="k">COPY</span> requirements.txt .
 <span class="k">RUN</span> pip install -r requirements.txt
 <span class="k">COPY</span> . .
-<span class="k">CMD</span> [<span class="s">"uvicorn"</span>, <span class="s">"app:app"</span>, <span class="s">"--host"</span>, <span class="s">"0.0.0.0"</span>, <span class="s">"--port"</span>, <span class="s">"8000"</span>]</code></pre>
+<span class="k">CMD</span> [<span class="s">"uvicorn"</span>, <span class="s">"app:app"</span>, <span class="s">"--host"</span>, <span class="s">"0.0.0.0"</span>, <span class="s">"--port"</span>, <span class="s">"8000"</span>]
+<span class="c"># build &amp; run:  docker build -t myagent .  &amp;&amp;  docker run -p 8000:8000 myagent</span></code></pre>
+
+<h3>FastAPI</h3>
+<p>FastAPI is the standard way to expose your agent as an HTTP API — fast, typed, with automatic docs. It turns your agent into something other apps (and webhooks) can call.</p>
+<pre><code><span class="k">from</span> fastapi <span class="k">import</span> FastAPI
+<span class="n">app</span> = <span class="f">FastAPI</span>()
+
+<span class="n">@app.post</span>(<span class="s">"/ask"</span>)
+<span class="k">def</span> <span class="f">ask</span>(<span class="n">question</span>: <span class="f">str</span>):
+    <span class="n">answer</span> = <span class="f">run_agent</span>(<span class="n">question</span>)
+    <span class="k">return</span> {<span class="s">"answer"</span>: <span class="n">answer</span>}
+<span class="c"># run:  uvicorn app:app --reload   → interactive docs at /docs</span></code></pre>
+
+<h3>CI/CD</h3>
+<p>Continuous Integration / Continuous Deployment automates the path from commit to production: on every push, run tests, build the image, and deploy if green. It removes manual, error-prone release steps.</p>
+
+<h3>GitHub Actions</h3>
+<p>The most common CI/CD system for GitHub repos. You describe a workflow in YAML; it runs on GitHub's servers on the events you choose (push, PR, schedule).</p>
+<pre><code><span class="c"># .github/workflows/ci.yml</span>
+<span class="k">on:</span> [push]
+<span class="k">jobs:</span>
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -r requirements.txt
+      - run: pytest -q        <span class="c"># fail the build if tests fail</span></code></pre>
+
+<h3>Cloud platforms</h3>
+<p>AWS, Azure, and GCP host your containers and provide databases, secrets, queues, and scaling. Pick one and learn its basics — how to run a container, store secrets, and read logs. Simpler PaaS options (Render, Railway, Fly.io) are great for a first deploy.</p>
+
+<h3>Server deployment</h3>
+<p>Tying it together: build the Docker image in CI, push it to a registry, and run it on your cloud host behind HTTPS. Store secrets as environment variables in the platform (never in the image), and wire up logging/monitoring (Phase 14) before you call it done.</p>
 </section>
 
 <div class="phase-banner">
@@ -1452,16 +1932,26 @@ Research   Coding   Testing  Reporting  Deployment
   <p>Real AI systems are non-deterministic and cost money per call. You can't improve what you can't see — instrument everything.</p>
 </div>
 <section id="phase14">
-<p>Track these from day one of any production agent:</p>
-<table>
-<tr><th>Signal</th><th>Why</th></tr>
-<tr><td><strong>Logging</strong></td><td>What the agent did, which tools it called, and why</td></tr>
-<tr><td><strong>Tracing</strong></td><td>Follow one request across agents/tools/LLM calls end to end</td></tr>
-<tr><td><strong>Evaluation</strong></td><td>Score output quality against a fixed test set so changes don't regress</td></tr>
-<tr><td><strong>Cost tracking</strong></td><td>Tokens × price per call — agent loops get expensive fast</td></tr>
-<tr><td><strong>Latency monitoring</strong></td><td>Where time goes; retrieval vs generation vs tool calls</td></tr>
-<tr><td><strong>Prompt versioning</strong></td><td>Prompts are code — version them so you can roll back a bad change</td></tr>
-</table>
+<p>Real AI systems are non-deterministic and cost money per call. You can't improve what you can't see — instrument these from day one of any production agent.</p>
+
+<h3>Logging</h3>
+<p>Record what the agent did: which tools it called, with what arguments, and what came back. When an agent misbehaves, structured logs are your first and best clue. (You built the habit in Phase 2.)</p>
+
+<h3>Tracing</h3>
+<p>A trace follows a single request end to end across every LLM call, tool call, and sub-agent — with timing for each step. Essential for multi-agent systems where one user request fans out into many operations.</p>
+
+<h3>Evaluation</h3>
+<p>Score output quality against a fixed set of test cases (a "golden set") so you can tell whether a prompt or model change actually improved things — or quietly regressed them. This is how you iterate with confidence instead of vibes.</p>
+
+<h3>Cost tracking</h3>
+<p>Every call costs tokens × price, and agent loops can multiply that fast. Track spend per request, per user, and per feature so a runaway loop or a chatty prompt doesn't surprise you on the invoice.</p>
+
+<h3>Latency monitoring</h3>
+<p>Measure where time goes — retrieval vs generation vs tool calls — so you optimize the actual bottleneck. Users feel latency directly, and long agent chains add up.</p>
+
+<h3>Prompt versioning</h3>
+<p>Prompts are code: version them, review changes, and keep the ability to roll back. Tie each production output to the prompt version that produced it so you can reproduce and debug.</p>
+
 <p>Tools you'll encounter: LangSmith, Langfuse, Phoenix, and Weights &amp; Biases for LLM tracing/eval, plus general APM (Datadog, Grafana) for latency and cost dashboards.</p>
 </section>
 
@@ -1577,16 +2067,82 @@ print("evens:", nums)
     }
   });
 
-  // Click any code example to load it into the editor
-  document.querySelectorAll("main pre").forEach((pre) => {
+  // Click a runnable (Python) example to load it into the editor
+  document.querySelectorAll("main pre.run").forEach((pre) => {
     pre.addEventListener("click", () => {
-      editor.value = pre.innerText.replace(/\n▶ Load$/, "").trimEnd() + "\n";
+      editor.value = pre.innerText.replace(/▶ Load\s*$/, "").trimEnd() + "\n";
       editor.focus();
       document.getElementById("repl").scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
 
   boot();
+})();
+</script>
+<script>
+// Build the sidebar index from the document: one collapsible group per phase,
+// with a sub-link for every topic (section h2 for Phase 1, h3 for later phases).
+(function () {
+  const main = document.querySelector("main");
+  const toc = document.getElementById("toc");
+  if (!main || !toc) return;
+  const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+  const groups = [];
+  let cur = null;
+  for (const el of main.children) {
+    if (el.classList && el.classList.contains("phase-banner")) {
+      const h2 = el.querySelector("h2");
+      const pnum = el.querySelector(".pnum");
+      el.id = el.id || "grp-" + slug((pnum ? pnum.textContent + " " : "") + (h2 ? h2.textContent : ""));
+      cur = {
+        pnum: pnum ? pnum.textContent.trim() : "",
+        title: h2 ? h2.textContent.trim() : "",
+        target: el.id,
+        items: [],
+      };
+      groups.push(cur);
+    } else if (el.tagName === "SECTION") {
+      if (el.id === "roadmap") continue;            // standalone link
+      const topH2 = el.querySelector(":scope > h2");
+      const isPhase1 = cur && cur.pnum.toLowerCase() === "phase 1";
+      if (isPhase1 && topH2) {
+        cur.items.push({ label: topH2.textContent.replace(/^\d+\.\s*/, ""), id: el.id });
+      } else if (cur) {
+        const h3s = el.querySelectorAll(":scope > h3");
+        if (h3s.length) {
+          h3s.forEach((h) => {
+            h.id = h.id || el.id + "-" + slug(h.textContent);
+            cur.items.push({ label: h.textContent, id: h.id });
+          });
+        } else {
+          cur.items.push({ label: cur.title, id: el.id });
+        }
+      }
+    }
+  }
+
+  let html = '<h2>Contents</h2>';
+  html += '<a class="phase-link" href="#roadmap">Overview map</a>';
+  groups.forEach((g, i) => {
+    const label = (g.pnum ? g.pnum + " — " : "") + g.title;
+    html += `<div class="nav-phase" data-target="${g.target}" data-sub="sub${i}">${label}</div>`;
+    html += `<div class="nav-sub" id="sub${i}">`;
+    g.items.forEach((it) => (html += `<a href="#${it.id}">${it.label}</a>`));
+    html += "</div>";
+  });
+  toc.innerHTML = html;
+
+  const headers = toc.querySelectorAll(".nav-phase");
+  headers.forEach((h, i) => {
+    const sub = document.getElementById(h.dataset.sub);
+    if (i === 0) { h.classList.add("open"); sub.classList.add("open"); }  // Phase 1 open by default
+    h.addEventListener("click", () => {
+      const open = sub.classList.toggle("open");
+      h.classList.toggle("open", open);
+      if (h.dataset.target) location.hash = h.dataset.target;
+    });
+  });
 })();
 </script>
 </body>
