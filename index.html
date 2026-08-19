@@ -213,6 +213,115 @@
     white-space: pre;
   }
   .plan-table td:first-child { color: var(--accent2); font-weight: 600; white-space: nowrap; }
+  /* Sticky Python playground */
+  aside#repl {
+    width: 440px;
+    min-width: 440px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--sidebar);
+    border-left: 1px solid var(--border);
+    padding: 18px 16px;
+  }
+  aside#repl .repl-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  aside#repl h2 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent2);
+    margin: 0;
+  }
+  aside#repl .status { font-size: 12px; color: var(--muted); }
+  aside#repl .toolbar { display: flex; gap: 8px; margin-bottom: 8px; }
+  aside#repl button {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: background .15s, opacity .15s;
+  }
+  aside#repl button#run {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  aside#repl button#run:hover { background: #6ba0ff; }
+  aside#repl button.ghost { background: var(--card); color: var(--muted); }
+  aside#repl button.ghost:hover { color: var(--text); }
+  aside#repl button:disabled { opacity: .5; cursor: not-allowed; }
+  aside#repl #editor {
+    flex: 1 1 55%;
+    width: 100%;
+    resize: none;
+    background: var(--code-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: "SF Mono", "Fira Code", Consolas, Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    tab-size: 4;
+    outline: none;
+  }
+  aside#repl #editor:focus { border-color: var(--accent); }
+  aside#repl .out-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #5b6472;
+    margin: 12px 0 4px;
+  }
+  aside#repl #output {
+    flex: 1 1 45%;
+    overflow: auto;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 0;
+    font-family: "SF Mono", Consolas, Menlo, monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--green);
+  }
+  aside#repl #output .err { color: #ff6b6b; }
+  aside#repl #output .muted { color: var(--muted); }
+  /* code blocks become clickable to load into the playground */
+  main pre { position: relative; cursor: pointer; }
+  main pre::after {
+    content: "▶ Load";
+    position: absolute;
+    top: 8px; right: 10px;
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--sidebar);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 8px;
+    opacity: 0;
+    transition: opacity .15s;
+    font-family: -apple-system, sans-serif;
+  }
+  main pre:hover::after { opacity: 1; }
+  @media (max-width: 1180px) {
+    aside#repl { display: none; }
+    main pre { cursor: auto; }
+    main pre::after { display: none; }
+  }
   @media (max-width: 760px) {
     nav#toc { display: none; }
     main { padding: 28px 18px 80px; }
@@ -1378,6 +1487,107 @@ Research   Coding   Testing  Reporting  Deployment
 <p class="meta">End of roadmap. Phase 1 examples run on Python 3.10+; later phases show representative code for the OpenAI Agents SDK, Chroma, FastAPI, and friends. Save this file anywhere and open it in a browser — no internet connection required.</p>
 
 </main>
+<aside id="repl">
+  <div class="repl-head">
+    <h2>Python Playground</h2>
+    <span class="status" id="status">Loading runtime…</span>
+  </div>
+  <div class="toolbar">
+    <button id="run" disabled>▶ Run</button>
+    <button id="clear" class="ghost">Clear</button>
+    <button id="reset" class="ghost">Reset</button>
+  </div>
+  <textarea id="editor" spellcheck="false"># Real Python runs here, right in your browser.
+# Click "Load" on any code example to send it here.
+
+for i in range(1, 6):
+    print(f"{i} squared = {i * i}")
+
+nums = [n for n in range(10) if n % 2 == 0]
+print("evens:", nums)
+</textarea>
+  <div class="out-label">Output</div>
+  <pre id="output"><span class="muted">Run your code to see output here.</span></pre>
+</aside>
 </div>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+<script>
+(function () {
+  const runBtn = document.getElementById("run");
+  const clearBtn = document.getElementById("clear");
+  const resetBtn = document.getElementById("reset");
+  const editor = document.getElementById("editor");
+  const output = document.getElementById("output");
+  const status = document.getElementById("status");
+  const DEFAULT_CODE = editor.value;
+  let pyodide = null;
+
+  function write(text, cls) {
+    const span = document.createElement("span");
+    if (cls) span.className = cls;
+    span.textContent = text;
+    output.appendChild(span);
+  }
+
+  async function boot() {
+    try {
+      pyodide = await loadPyodide();
+      pyodide.setStdout({ batched: (s) => write(s + "\n") });
+      pyodide.setStderr({ batched: (s) => write(s + "\n", "err") });
+      status.textContent = "Ready";
+      runBtn.disabled = false;
+    } catch (e) {
+      status.textContent = "Load failed (needs internet)";
+      output.innerHTML = "";
+      write("Could not load the Python runtime. The playground needs an internet connection the first time it loads. The guide itself works offline.", "err");
+    }
+  }
+
+  async function run() {
+    if (!pyodide) return;
+    output.innerHTML = "";
+    runBtn.disabled = true;
+    status.textContent = "Running…";
+    try {
+      await pyodide.runPythonAsync(editor.value);
+      if (!output.textContent.trim()) write("(no output)", "muted");
+      status.textContent = "Ready";
+    } catch (e) {
+      write(String(e.message || e), "err");
+      status.textContent = "Error";
+    } finally {
+      runBtn.disabled = false;
+    }
+  }
+
+  runBtn.addEventListener("click", run);
+  clearBtn.addEventListener("click", () => {
+    output.innerHTML = '<span class="muted">Cleared.</span>';
+  });
+  resetBtn.addEventListener("click", () => { editor.value = DEFAULT_CODE; });
+
+  // Ctrl/Cmd+Enter to run; Tab inserts 4 spaces
+  editor.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); }
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const s = editor.selectionStart, en = editor.selectionEnd;
+      editor.value = editor.value.slice(0, s) + "    " + editor.value.slice(en);
+      editor.selectionStart = editor.selectionEnd = s + 4;
+    }
+  });
+
+  // Click any code example to load it into the editor
+  document.querySelectorAll("main pre").forEach((pre) => {
+    pre.addEventListener("click", () => {
+      editor.value = pre.innerText.replace(/\n▶ Load$/, "").trimEnd() + "\n";
+      editor.focus();
+      document.getElementById("repl").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  boot();
+})();
+</script>
 </body>
 </html>
