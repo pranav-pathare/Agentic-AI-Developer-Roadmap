@@ -28,3 +28,12 @@ print(f"Type of e: {type(e)}")
 print(f"Type of f: {type(f)}")
 print(f"Type of g: {type(g)}")
 print(f"Type of h: {type(h)}")
+def add(x, y):
+    print("This line will get executed")
+    return x + y
+    print("This line will never be executed")
+
+x = add(10,5)
+
+print(x)
+
