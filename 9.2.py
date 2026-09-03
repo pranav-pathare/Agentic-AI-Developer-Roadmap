@@ -9,3 +9,4 @@ response = client.models.generate_content(
     contents="Hello"
 )
 print(response.text)
+
