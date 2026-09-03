@@ -1,9 +1,11 @@
+import os
 from google import genai
 
-client = genai.Client(api_key="REMOVED_API_KEY")
+# Read the key from an environment variable (never hardcode secrets in code).
+client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-interaction = client.interactions.create(
-    model="gemini-3.8-flash",
-    input="Hello"
+response = client.models.generate_content(
+    model="gemini-2.5-flash",
+    contents="Hello"
 )
-print(interaction.output_text)
+print(response.text)
