@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+# Agentic-AI-Developer-Roadmap
+=======
 # Agentic-AI-Developer-Roadmap
 
 # AI & ML Fundamentals — Video Notes
@@ -220,3 +223,4 @@ AI
                └── Computer Vision (CNNs)
 ```
 
+>>>>>>> origin/main
