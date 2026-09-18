@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+## Summary
 # Agentic-AI-Developer-Roadmap
 =======
 # Agentic-AI-Developer-Roadmap
